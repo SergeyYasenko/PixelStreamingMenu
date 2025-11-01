@@ -239,12 +239,15 @@ const handleGoodiniSendToEngine = (data) => {
 .bottom-menu-item {
    display: flex;
    flex: 1 1 auto;
-   height: 40px;
+   height: 50px;
    align-items: center;
    cursor: pointer;
    padding: 0 15px;
    transition: all 0.3s ease;
    border-right: 1px solid rgba(255, 255, 255, 0.3);
+   @media (max-width: 1549px) {
+      height: 40px;
+   }
 }
 
 .bottom-menu-item:last-child {
