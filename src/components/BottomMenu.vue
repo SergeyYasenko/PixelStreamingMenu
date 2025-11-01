@@ -1,11 +1,13 @@
 <template>
-   <div class="bottom-menu">
+   <!-- Десктопная версия -->
+   <div class="bottom-menu bottom-menu-desktop">
       <div class="bottom-menu-content">
          <div
             class="bottom-menu-item"
             v-for="item in menuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
+            @click="handleItemClick(item)"
          >
             <img
                :src="item.icon"
@@ -13,15 +15,92 @@
                :style="{ width: item.width, height: item.height }"
                class="bottom-menu-icon"
             />
-            <span class="bottom-menu-text">{{ item.name }}</span>
+            <span class="bottom-menu-text" v-if="item.name">{{
+               item.name
+            }}</span>
          </div>
       </div>
-      <div class="bottom-menu-company">GOODINI</div>
+      <div class="bottom-menu-company" @click="handleGoodiniClick">
+         GOODINI
+         <div
+            class="goodini-settings-container"
+            v-if="showSettings"
+            @click.stop
+         >
+            <GoodiniSettings
+               @close="hideSettings"
+               @qualitySelected="handleQualitySelected"
+               @sendToEngine="handleGoodiniSendToEngine"
+            />
+         </div>
+      </div>
+   </div>
+
+   <!-- Мобильная версия -->
+   <div class="bottom-menu bottom-menu-mobile">
+      <div class="bottom-menu-content-mobile">
+         <div
+            class="bottom-menu-item"
+            v-for="item in mobileMenuItems"
+            :key="item.id"
+            :style="{ alignItems: item.alignItems }"
+            @click="handleItemClick(item)"
+         >
+            <img
+               :src="item.icon"
+               :alt="item.name"
+               :style="{ width: item.width, height: item.height }"
+               class="bottom-menu-icon"
+            />
+            <span class="bottom-menu-text" v-if="item.name">{{
+               item.name
+            }}</span>
+         </div>
+      </div>
+      <div class="bottom-menu-bottom-mobile">
+         <div
+            class="bottom-menu-item"
+            @click="handleItemClick({ name: 'Home' })"
+         >
+            <img
+               src="../assets/icons/bottomMenu/home.png"
+               alt="Home"
+               class="bottom-menu-icon"
+            />
+         </div>
+         <div class="bottom-menu-company" @click="handleGoodiniClick">
+            GOODINI
+            <div
+               class="goodini-settings-container"
+               v-if="showSettings"
+               @click.stop
+            >
+               <GoodiniSettings
+                  @close="hideSettings"
+                  @qualitySelected="handleQualitySelected"
+                  @sendToEngine="handleGoodiniSendToEngine"
+               />
+            </div>
+         </div>
+      </div>
    </div>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed } from "vue";
+import GoodiniSettings from "./GoodiniSettings.vue";
+
+const emit = defineEmits([
+   "hide",
+   "showWeatherTime",
+   "showDataBlocks",
+   "showGoodiniSettings",
+   "qualitySelected",
+   "sendToEngine",
+   "showApartments",
+]);
+
+const showSettings = ref(false);
 
 // Данные для нижнего меню
 const menuItems = ref([
@@ -57,7 +136,7 @@ const menuItems = ref([
    {
       id: 7,
       name: "Квартиры",
-      icon: "src/assets/icons/bottomMenu/season.png",
+      icon: "src/assets/icons/bottomMenu/infrastructure.png",
    },
    {
       id: 8,
@@ -69,33 +148,82 @@ const menuItems = ref([
    {
       id: 9,
       name: "Next mode",
-      icon: "src/assets/icons/bottomMenu/cursor.png",
-      width: "44px",
-      height: "44px",
+      icon: "src/assets/icons/bottomMenu/next-mode.svg",
+      width: "35px",
+      height: "35px",
    },
    {
       id: 10,
       name: "Holo mode",
-      icon: "src/assets/icons/bottomMenu/cursor.png",
-      width: "44px",
-      height: "44px",
+      icon: "src/assets/icons/bottomMenu/hold-mode.svg",
+      width: "35px",
+      height: "35px",
    },
 ]);
+
+// Для мобильной версии исключаем кнопку Home (id: 1)
+const mobileMenuItems = computed(() => {
+   return menuItems.value.filter((item) => item.id !== 1);
+});
+
+const handleItemClick = (item) => {
+   if (item.name === "Home") {
+      emit("sendToEngine", { home: "" });
+   } else if (item.name === "Скрыть") {
+      emit("hide");
+   } else if (item.name === "Погода и время") {
+      emit("showWeatherTime");
+   } else if (item.name === "Сезон") {
+      emit("sendToEngine", { season: "" });
+   } else if (item.name === "Инфраструктура") {
+      emit("showDataBlocks", "infrastructure");
+      emit("sendToEngine", { infrastructure: "" });
+   } else if (item.name === "Внутренний двор") {
+      emit("showDataBlocks", "courtyard");
+      emit("sendToEngine", { courtyard: "" });
+   } else if (item.name === "Квартиры") {
+      emit("showApartments");
+   } else if (item.name === "Курсор") {
+      emit("sendToEngine", { cursor: "" });
+   } else if (item.name === "Next mode") {
+      emit("sendToEngine", { nextmode: "" });
+   } else if (item.name === "Holo mode") {
+      emit("sendToEngine", { holomode: "" });
+   }
+};
+
+const handleGoodiniClick = () => {
+   showSettings.value = !showSettings.value;
+   emit("showGoodiniSettings");
+};
+
+const hideSettings = () => {
+   showSettings.value = false;
+};
+
+const handleQualitySelected = (quality) => {
+   emit("qualitySelected", quality);
+};
+
+const handleGoodiniSendToEngine = (data) => {
+   emit("sendToEngine", data);
+};
 </script>
 
 <style scoped>
 .bottom-menu {
-   position: fixed;
-   bottom: 0;
-   left: 0;
+   position: relative;
    width: 100%;
    background-color: rgba(34, 34, 34, 0.9);
-   border-top: 1px solid #fff;
+   z-index: 10;
+   pointer-events: auto;
+}
+
+/* Десктопная версия */
+.bottom-menu-desktop {
    display: flex;
    justify-content: space-between;
    align-items: center;
-   z-index: 10;
-   pointer-events: auto;
 }
 
 .bottom-menu-content {
@@ -110,7 +238,8 @@ const menuItems = ref([
 
 .bottom-menu-item {
    display: flex;
-   height: 45px;
+   flex: 1 1 auto;
+   height: 40px;
    align-items: center;
    cursor: pointer;
    padding: 0 15px;
@@ -135,7 +264,7 @@ const menuItems = ref([
 }
 
 .bottom-menu-text {
-   font-size: 12px;
+   font-size: 0.75rem;
    color: #fff;
    text-align: center;
    letter-spacing: 1px;
@@ -143,7 +272,8 @@ const menuItems = ref([
 }
 
 .bottom-menu-company {
-   font-size: 18px;
+   position: relative;
+   font-size: 1.125rem;
    color: #fff;
    text-align: center;
    letter-spacing: 1px;
@@ -151,5 +281,72 @@ const menuItems = ref([
    font-family: "Roboto", sans-serif;
    letter-spacing: 10px;
    margin-right: 40px;
+   cursor: pointer;
+   transition: opacity 0.3s ease;
+}
+
+.goodini-settings-container {
+   position: absolute;
+   top: 0;
+   right: 0;
+   z-index: 10001;
+}
+
+/* Мобильная версия */
+.bottom-menu-mobile {
+   display: none;
+   flex-direction: column;
+}
+
+.bottom-menu-content-mobile {
+   display: flex;
+   flex-wrap: wrap;
+   padding: 15px;
+   gap: 5px;
+}
+
+.bottom-menu-content-mobile .bottom-menu-item {
+   border-right: none;
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   padding: 8px 12px;
+   border-radius: 4px;
+   flex: 0 1 auto;
+}
+
+.bottom-menu-bottom-mobile {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 10px 20px;
+   border-top: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.bottom-menu-bottom-mobile .bottom-menu-item {
+   border: none;
+   padding: 5px 10px;
+}
+
+.bottom-menu-bottom-mobile .bottom-menu-company {
+   margin-right: 0;
+}
+
+/* Показываем мобильную версию только на экранах < 1550px */
+@media (max-width: 1549px) {
+   .bottom-menu-desktop {
+      display: none;
+   }
+   .bottom-menu-mobile {
+      display: flex;
+   }
+}
+
+/* Показываем десктопную версию только на экранах >= 1550px */
+@media (min-width: 1550px) {
+   .bottom-menu-desktop {
+      display: flex;
+   }
+   .bottom-menu-mobile {
+      display: none;
+   }
 }
 </style>

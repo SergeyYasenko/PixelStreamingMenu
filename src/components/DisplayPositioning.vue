@@ -17,6 +17,7 @@
                v-for="item in menuItems"
                :key="item.id"
                :class="{ centered: !item.icon }"
+               @click="handleItemClick(item.name)"
             >
                <img
                   v-if="item.icon"
@@ -30,14 +31,45 @@
             </div>
          </div>
       </div>
+
+      <!-- Стрелки навигации для 1st person и drone -->
+      <div v-if="showArrows" class="navigation-arrows">
+         <div class="arrow arrow-left" @click="handleArrowClick('left')">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+               <path
+                  d="M6 2L3 5L6 8"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+               />
+            </svg>
+         </div>
+         <div class="arrow arrow-right" @click="handleArrowClick('right')">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+               <path
+                  d="M4 2L7 5L4 8"
+                  stroke="currentColor"
+                  stroke-width="1"
+                  fill="none"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+               />
+            </svg>
+         </div>
+      </div>
    </div>
 </template>
 
 <script setup>
 import { ref } from "vue";
 
+const emit = defineEmits(["sendToEngine"]);
+
 // Реактивные данные
 const isMenuOpen = ref(false);
+const showArrows = ref(false);
 
 // Данные элементов меню
 const menuItems = ref([
@@ -77,6 +109,40 @@ const menuItems = ref([
 const toggleMenu = () => {
    isMenuOpen.value = !isMenuOpen.value;
 };
+
+const handleItemClick = (itemName) => {
+   // Маппинг названий кнопок на команды для Unreal Engine
+   const commandMap = {
+      presentation: "presentation",
+      "1st person": "fpc",
+      drone: "drone",
+      "Car Camera": "car",
+      Rotation: "rotation",
+      Shake: "shake",
+   };
+
+   const command = commandMap[itemName];
+   if (command) {
+      emit("sendToEngine", { [command]: "" });
+   }
+
+   if (itemName === "1st person" || itemName === "drone") {
+      showArrows.value = true;
+      isMenuOpen.value = false;
+   } else {
+      // При клике на другие элементы убираем стрелки
+      showArrows.value = false;
+      isMenuOpen.value = false;
+   }
+};
+
+const handleArrowClick = (direction) => {
+   if (direction === "left") {
+      emit("sendToEngine", { prevtarget: "" });
+   } else if (direction === "right") {
+      emit("sendToEngine", { nexttarget: "" });
+   }
+};
 </script>
 
 <style scoped>
@@ -86,6 +152,10 @@ const toggleMenu = () => {
    right: 0;
    z-index: 15;
    pointer-events: auto;
+
+   @media (max-width: 1549px) {
+      top: 75px;
+   }
 }
 
 .display-positioning-wrapper {
@@ -125,6 +195,11 @@ const toggleMenu = () => {
    opacity: 0;
    transform: translateX(100%);
    transition: all 0.4s ease;
+
+   @media (max-width: 1549px) {
+      top: -200%;
+      margin-right: 0;
+   }
 }
 
 .display-positioning-btn-items.open {
@@ -165,9 +240,44 @@ const toggleMenu = () => {
    width: 100%;
    text-align: center;
    color: #fff;
-   font-size: 12px;
+   font-size: 0.75rem;
    letter-spacing: 1px;
    background-color: rgba(0, 0, 0);
    padding: 0 5px;
+}
+
+/* Навигационные стрелки */
+.navigation-arrows {
+   position: fixed;
+   top: 0;
+   left: 0;
+   width: 100%;
+   height: 100%;
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   pointer-events: none;
+   z-index: 1000;
+}
+
+.arrow {
+   width: 10px;
+   height: 10px;
+   cursor: pointer;
+   pointer-events: auto;
+   color: #fff;
+   transition: opacity 0.3s ease;
+}
+
+.arrow:hover {
+   opacity: 0.7;
+}
+
+.arrow-left {
+   margin-left: 20px;
+}
+
+.arrow-right {
+   margin-right: 20px;
 }
 </style>

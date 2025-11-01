@@ -49,7 +49,7 @@ const props = defineProps({
    },
 });
 
-const emit = defineEmits(["update:selectedValue", "select"]);
+const emit = defineEmits(["update:selectedValue", "select", "itemClick"]);
 
 const gridRows = computed(() => {
    const rows = [];
@@ -69,6 +69,9 @@ const isSelected = (value) => {
 };
 
 const handleSelect = (value) => {
+   // Emit для клика на отдельный элемент
+   emit("itemClick", value);
+
    if (props.multiple) {
       const currentValues = Array.isArray(props.selectedValue)
          ? [...props.selectedValue]
@@ -96,32 +99,44 @@ const handleSelect = (value) => {
 .grid-selector {
    border-radius: 4px;
    min-width: 150px;
-   height: 100%;
    display: flex;
    flex-direction: column;
-   justify-content: center;
+   align-self: stretch;
 }
 
 .grid-selector-title {
    width: 100%;
    background-color: rgba(34, 34, 34, 0.8);
-   font-size: 14px;
+   font-size: 0.875rem;
    color: #fff;
    text-align: center;
    padding-left: 15px;
    letter-spacing: 1px;
    text-transform: uppercase;
    font-weight: 500;
+
+   @media (max-width: 1549px) {
+      background-color: transparent;
+      text-align: left;
+   }
 }
 
 .grid-selector-wrapper {
    padding: 15px;
    backdrop-filter: blur(10px);
+   background-color: rgba(34, 34, 34, 0.2);
    display: flex;
    flex-direction: column;
    gap: 8px;
    flex: 1;
    justify-content: center;
+   min-height: 0;
+
+   @media (max-width: 1549px) {
+      padding: 10px;
+      backdrop-filter: none;
+      background-color: transparent;
+   }
 }
 
 .grid-selector-row {
@@ -131,6 +146,7 @@ const handleSelect = (value) => {
 }
 
 .grid-selector-item {
+   max-height: 40px;
    flex: 1;
    background-color: rgba(34, 34, 34, 0.8);
    border: 1px solid rgba(255, 255, 255, 0.3);
@@ -143,6 +159,7 @@ const handleSelect = (value) => {
    display: flex;
    align-items: center;
    justify-content: center;
+   padding: 0 30px;
 }
 
 .grid-selector-item:hover {
@@ -153,5 +170,23 @@ const handleSelect = (value) => {
 .grid-selector-item.selected {
    background-color: rgba(134, 2, 2, 0.8);
    border-color: #fff;
+}
+
+/* На экранах ниже 1550px элементы выстраиваются в 1 ряд */
+@media (max-width: 1549px) {
+   .grid-selector-wrapper {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 8px;
+   }
+
+   .grid-selector-row {
+      flex: 1 1 100%;
+      display: contents;
+   }
+
+   .grid-selector-item {
+      flex: 0 1 auto;
+   }
 }
 </style>

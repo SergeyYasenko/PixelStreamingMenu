@@ -107,30 +107,43 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
 <style scoped>
 .range-input-container {
    border-radius: 4px;
-   min-width: 200px;
-   height: 100%;
+   min-width: 150px;
    display: flex;
    flex-direction: column;
+   align-self: stretch;
 }
 
 .range-input-title {
    width: 100%;
    background-color: rgba(34, 34, 34, 0.8);
-   font-size: 14px;
+   font-size: 0.875rem;
    color: #fff;
    padding-left: 15px;
    letter-spacing: 1px;
    text-transform: uppercase;
    font-weight: 500;
+
+   @media (max-width: 1549px) {
+      background-color: transparent;
+      padding-bottom: 10px;
+   }
 }
 
 .range-input-value-container {
    padding: 15px;
    backdrop-filter: blur(10px);
+   background-color: rgba(34, 34, 34, 0.2);
    flex: 1;
    display: flex;
    flex-direction: column;
    justify-content: center;
+   min-height: 0;
+
+   @media (max-width: 1549px) {
+      backdrop-filter: none;
+      background-color: transparent;
+      padding: 0;
+   }
 }
 
 .range-input-value-row {
@@ -139,33 +152,40 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    display: flex;
    flex-direction: column;
    justify-content: center;
+   flex: 1;
+
+   @media (max-width: 1549px) {
+      background-color: transparent;
+      padding: 0;
+   }
 }
 
 .range-input-value-wrapper {
    display: flex;
    align-items: center;
-   margin-bottom: 10px;
    font-weight: 500;
 }
 
 .range-input-value-text {
-   font-size: 16px;
+   font-size: 1rem;
    color: #fff;
    margin-right: 5px;
    text-transform: capitalize;
+   letter-spacing: 5px;
 }
 
 .range-input-value-number {
-   font-size: 16px;
+   font-size: 1rem;
    color: #fff;
    text-transform: capitalize;
+   letter-spacing: 3px;
 }
 
 .range-input-wrapper {
    position: relative;
    width: 100%;
-   padding-top: 30px;
-   padding-bottom: 30px;
+   padding-top: 20px;
+   padding-bottom: 25px;
 }
 
 /* Labels над слайдером */
@@ -176,7 +196,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    right: 0;
    display: flex;
    justify-content: flex-end;
-   font-size: 12px;
+   font-size: 0.75rem;
    color: rgba(255, 255, 255, 0.8);
    font-weight: 400;
 }
@@ -189,7 +209,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    right: 0;
    display: flex;
    justify-content: space-between;
-   font-size: 12px;
+   font-size: 0.75rem;
    color: rgba(255, 255, 255, 0.8);
    font-weight: 400;
 }

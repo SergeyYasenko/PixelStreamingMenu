@@ -33,6 +33,7 @@
             :last-message="lastMessage"
             :received-messages="receivedMessages"
             @send-data="sendJsonData"
+            @send-to-engine="sendToEngine"
          />
       </div>
    </div>
@@ -75,6 +76,7 @@ const connect = async () => {
             StartVideoMuted: false,
             HoveringMouse: true,
             FakeMouseWithTouches: true,
+            LogLevel: "Error", // Отключаем информационные логи
          },
       });
 
@@ -141,6 +143,12 @@ const connect = async () => {
 const sendJsonData = () => {
    if (pixelStreaming) {
       pixelStreaming.emitUIInteraction({ action: "jump" });
+   }
+};
+
+const sendToEngine = (data) => {
+   if (pixelStreaming) {
+      pixelStreaming.emitUIInteraction(data);
    }
 };
 

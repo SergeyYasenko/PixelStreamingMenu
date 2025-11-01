@@ -13,37 +13,64 @@
                :selectedFloor="selectedFloor"
                :showFloors="showFloors"
                @selectFloor="selectFloor"
+               @hideFloors="hideFloors"
             />
          </div>
-         <DisplayPositioning />
+         <DisplayPositioning @sendToEngine="handleSendToEngine" />
       </div>
-      <ApartmentSelector
-         :selected-corp="selectedCorp"
-         :selected-floor="selectedFloor"
-         :selected-area-min="selectedAreaMin"
-         :selected-rooms="selectedRooms"
-         :selected-availability="selectedAvailability"
-         @update:selectedCorp="selectCorp"
-         @update:selectedFloor="selectFloor"
-         @update:selectedAreaMin="selectedAreaMin = $event"
-         @update:selectedRooms="(value) => (selectedRooms = value)"
-         @update:selectedAvailability="
-            (value) => (selectedAvailability = value)
-         "
-      />
-      <BottomMenu />
+      <div class="bottom-menu-wrapper">
+         <BottomMenu
+            @hide="hideAllMenus"
+            @showWeatherTime="showWeatherTimeSelector"
+            @showDataBlocks="showDataBlocksSelector"
+            @showGoodiniSettings="showGoodiniSettingsSelector"
+            @qualitySelected="handleQualitySelected"
+            @sendToEngine="handleSendToEngine"
+            @showApartments="showApartmentsSelector"
+         />
+         <ApartmentSelector
+            v-show="showApartmentSelector"
+            :selected-corp="apartmentSelectedCorp"
+            :selected-floor="apartmentSelectedFloor"
+            :selected-area-min="selectedAreaMin"
+            :selected-rooms="selectedRooms"
+            :selected-availability="selectedAvailability"
+            :corps="corps"
+            @update:selectedCorp="handleApartmentCorpSelect"
+            @update:selectedFloor="handleApartmentFloorSelect"
+            @update:selectedAreaMin="selectedAreaMin = $event"
+            @update:selectedRooms="(value) => (selectedRooms = value)"
+            @update:selectedAvailability="
+               (value) => (selectedAvailability = value)
+            "
+            @sendToEngine="handleSendToEngine"
+         />
+         <WeatherTimeSelector
+            v-show="showWeatherTime"
+            @close="hideWeatherTimeSelector"
+            @sendToEngine="handleSendToEngine"
+         />
+         <DataBlocksSelector
+            v-show="showDataBlocks"
+            :selected-type="dataBlocksType"
+            :external-data="externalDataBlocks"
+            @close="hideDataBlocksSelector"
+         />
+      </div>
    </div>
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import CorpSelector from "./CorpSelector.vue";
 import FloorSelector from "./FloorSelector.vue";
 import BottomMenu from "./BottomMenu.vue";
 import DisplayPositioning from "./DisplayPositioning.vue";
 import ApartmentSelector from "./ApartmentSelector.vue";
+import WeatherTimeSelector from "./WeatherTimeSelector.vue";
+import DataBlocksSelector from "./DataBlocksSelector.vue";
 
-defineProps({
+const props = defineProps({
    lastMessage: {
       type: String,
       default: "",
@@ -54,11 +81,49 @@ defineProps({
    },
 });
 
-defineEmits(["disconnect", "sendData", "clearMessages"]);
+const emit = defineEmits([
+   "disconnect",
+   "sendData",
+   "clearMessages",
+   "sendToEngine",
+]);
 
+// Данные из Unreal Engine для DataBlocksSelector
+const externalDataBlocks = ref([]);
+
+// Обработка данных из Unreal Engine
+watch(
+   () => props.lastMessage,
+   (newMessage) => {
+      if (!newMessage) return;
+
+      try {
+         const data = JSON.parse(newMessage);
+         // Проверяем, содержит ли сообщение структуру с list и items
+         if (data.list && data.items && Array.isArray(data.items)) {
+            externalDataBlocks.value.push({
+               list: data.list,
+               items: data.items,
+            });
+         }
+      } catch (error) {
+         // Не JSON или некорректный JSON - игнорируем
+      }
+   }
+);
+
+// Состояния для верхнего левого меню
 const selectedCorp = ref(null);
 const selectedFloor = ref(13);
 const showFloors = ref(false);
+
+// Состояния для нижнего меню
+const showApartmentSelector = ref(false);
+const showWeatherTime = ref(false);
+const showDataBlocks = ref(false);
+const dataBlocksType = ref("infrastructure");
+const apartmentSelectedCorp = ref(null);
+const apartmentSelectedFloor = ref(13);
 const selectedAreaMin = ref(0);
 const selectedRooms = ref([]);
 const selectedAvailability = ref([]);
@@ -83,15 +148,121 @@ const floors = computed(() => {
    return floorsArray;
 });
 
-// Методы
+// Методы для верхнего левого меню
 const selectCorp = (corpId) => {
    selectedCorp.value = corpId;
    selectedFloor.value = null;
    showFloors.value = true;
+
+   // Закрываем другие компоненты над нижним меню
+   showWeatherTime.value = false;
+   showDataBlocks.value = false;
+
+   apartmentSelectedFloor.value = 13;
+   showApartmentSelector.value = true;
+
+   // Отправляем данные на Unreal Engine
+   emit("sendToEngine", { buildings: String(corpId) });
 };
 
 const selectFloor = (floorId) => {
    selectedFloor.value = floorId;
+   // Отправляем данные на Unreal Engine
+   emit("sendToEngine", { floor: String(floorId) });
+};
+
+const hideFloors = () => {
+   showFloors.value = false;
+};
+
+// Методы для нижнего меню
+const handleApartmentCorpSelect = (corpId) => {
+   // Закрываем другие компоненты над нижним меню
+   showWeatherTime.value = false;
+   // Выбираем корпус только в ApartmentSelector
+   apartmentSelectedCorp.value = corpId;
+   apartmentSelectedFloor.value = 13;
+   showApartmentSelector.value = true;
+   // НЕ влияем на верхний CorpSelector
+};
+
+const handleApartmentFloorSelect = (floorId) => {
+   apartmentSelectedFloor.value = floorId;
+};
+
+// Метод для скрытия всех меню и сброса значений
+const hideAllMenus = () => {
+   // Скрываем меню
+   showFloors.value = false;
+   showApartmentSelector.value = false;
+   showWeatherTime.value = false;
+   showDataBlocks.value = false;
+
+   // Сбрасываем значения на дефолтные независимо
+   // Верхний CorpSelector
+   selectedCorp.value = null;
+   selectedFloor.value = 13;
+
+   // Нижний ApartmentSelector
+   apartmentSelectedCorp.value = null;
+   apartmentSelectedFloor.value = 13;
+   selectedAreaMin.value = 0;
+   selectedRooms.value = [];
+   selectedAvailability.value = [];
+};
+
+const showWeatherTimeSelector = () => {
+   // Закрываем другие компоненты над нижним меню
+   showFloors.value = false;
+   showApartmentSelector.value = false;
+   showDataBlocks.value = false;
+   // Открываем компонент погоды и времени
+   showWeatherTime.value = true;
+};
+
+const hideWeatherTimeSelector = () => {
+   showWeatherTime.value = false;
+};
+
+const showDataBlocksSelector = (type) => {
+   // Закрываем другие компоненты над нижним меню
+   showFloors.value = false;
+   showApartmentSelector.value = false;
+   showWeatherTime.value = false;
+   // Устанавливаем тип данных и открываем компонент
+   dataBlocksType.value = type;
+   showDataBlocks.value = true;
+};
+
+const hideDataBlocksSelector = () => {
+   showDataBlocks.value = false;
+};
+
+const showGoodiniSettingsSelector = () => {
+   // Закрываем другие компоненты над нижним меню
+   showFloors.value = false;
+   showApartmentSelector.value = false;
+   showWeatherTime.value = false;
+   showDataBlocks.value = false;
+};
+
+const showApartmentsSelector = () => {
+   // Закрываем другие компоненты над нижним меню
+   showFloors.value = false;
+   showWeatherTime.value = false;
+   showDataBlocks.value = false;
+   // Открываем ApartmentSelector
+   showApartmentSelector.value = true;
+};
+
+const handleQualitySelected = (quality) => {
+   // Позже будем передавать на Unreal Engine через Pixel Streaming
+   console.log(`Quality setting selected: ${quality}`);
+   // Здесь можно добавить отправку данных в Unreal Engine
+};
+
+const handleSendToEngine = (data) => {
+   emit("sendToEngine", data);
 };
 </script>
 
@@ -118,5 +289,12 @@ const selectFloor = (floorId) => {
    left: 0;
    z-index: 5;
    pointer-events: auto;
+}
+
+.bottom-menu-wrapper {
+   position: fixed;
+   bottom: 0;
+   left: 0;
+   width: 100%;
 }
 </style>

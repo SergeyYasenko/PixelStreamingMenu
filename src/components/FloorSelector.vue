@@ -25,7 +25,7 @@
             </div>
          </div>
          <div class="house-body-bottom-arrow-wrapper">
-            <div class="house-body-bottom-arrow">
+            <div class="house-body-bottom-arrow" @click="handleArrowClick">
                <img src="../assets/icons/arrow.png" alt="arrow-left" />
             </div>
          </div>
@@ -55,7 +55,11 @@ const props = defineProps({
    },
 });
 
-defineEmits(["selectFloor"]);
+const emit = defineEmits(["selectFloor", "hideFloors"]);
+
+const handleArrowClick = () => {
+   emit("hideFloors");
+};
 
 // Вычисляемое свойство для разбиения этажей на строки по 3 элемента
 const floorRows = computed(() => {
@@ -84,7 +88,7 @@ const floorRows = computed(() => {
 }
 
 .house-body-bottom-title {
-   font-size: 18px;
+   font-size: 1.125rem;
    letter-spacing: 2px;
 }
 
@@ -96,7 +100,7 @@ const floorRows = computed(() => {
 }
 
 .house-body-bottom-text {
-   font-size: 14px;
+   font-size: 0.875rem;
    letter-spacing: 1px;
 }
 
@@ -107,6 +111,10 @@ const floorRows = computed(() => {
    display: flex;
    flex-direction: column;
    align-items: space-between;
+
+   @media (max-width: 1549px) {
+      height: 200px;
+   }
 }
 
 .house-body-bottom-num-wrapper {
@@ -123,7 +131,7 @@ const floorRows = computed(() => {
 }
 
 .house-body-bottom-num {
-   font-size: 18px;
+   font-size: 1.125rem;
    cursor: pointer;
    flex: 1;
    border: 1px solid transparent;
@@ -156,5 +164,11 @@ const floorRows = computed(() => {
    width: 30px;
    cursor: pointer;
    transform: rotate(180deg);
+   transition: all 0.3s ease;
+}
+
+.house-body-bottom-arrow:hover img {
+   opacity: 0.5;
+   transition: all 0.3s ease;
 }
 </style>

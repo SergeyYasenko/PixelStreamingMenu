@@ -81,7 +81,7 @@ const corpRows = computed(() => {
 }
 
 .house-body-logo-title {
-   font-size: 32px;
+   font-size: 2rem;
    letter-spacing: 3px;
 }
 
@@ -114,7 +114,7 @@ const corpRows = computed(() => {
 }
 
 .house-body-top-num {
-   font-size: 20px;
+   font-size: 1.25rem;
    cursor: pointer;
    flex: 1;
    border: 1px solid transparent;
