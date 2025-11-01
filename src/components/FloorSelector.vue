@@ -90,6 +90,7 @@ const floorRows = computed(() => {
 .house-body-bottom-title {
    font-size: 1.125rem;
    letter-spacing: 2px;
+   user-select: none;
 }
 
 .house-body-bottom-text-wrapper {
@@ -102,6 +103,7 @@ const floorRows = computed(() => {
 .house-body-bottom-text {
    font-size: 0.875rem;
    letter-spacing: 1px;
+   user-select: none;
 }
 
 .house-body-bottom-wrapper {
@@ -138,6 +140,7 @@ const floorRows = computed(() => {
    transition: all 0.3s ease;
    border-radius: 4px;
    text-align: center;
+   user-select: none;
 }
 
 .house-body-bottom-num:hover {
@@ -165,6 +168,8 @@ const floorRows = computed(() => {
    cursor: pointer;
    transform: rotate(180deg);
    transition: all 0.3s ease;
+   user-select: none;
+   pointer-events: none;
 }
 
 .house-body-bottom-arrow:hover img {

@@ -184,6 +184,10 @@ onBeforeUnmount(() => {
    position: relative;
 }
 
+.video-container :deep(video) {
+   transform: scaleX(-1);
+}
+
 .overlay {
    position: absolute;
    top: 0;
@@ -248,6 +252,7 @@ onBeforeUnmount(() => {
    font-size: 1rem;
    cursor: pointer;
    transition: background 0.3s;
+   user-select: none;
 }
 
 .connect-btn:hover:not(:disabled) {

@@ -68,9 +68,9 @@ const handleClose = () => {
 
 const handleQualityClick = (quality) => {
    const qualityMap = {
-      highsettings: "",
-      mediumsettings: "",
-      lowsettings: "",
+      high: "highsettings",
+      balance: "mediumsettings",
+      performance: "lowsettings",
    };
    const key = qualityMap[quality];
    if (key) {
@@ -125,6 +125,7 @@ watch(
    transition: opacity 0.2s ease;
    padding: 0;
    line-height: 1;
+   user-select: none;
 }
 
 .close-btn:hover {
@@ -148,6 +149,7 @@ watch(
    align-items: center;
    cursor: pointer;
    width: 100%;
+   user-select: none;
 }
 
 .checkbox-input {

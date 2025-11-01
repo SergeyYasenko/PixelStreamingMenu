@@ -114,6 +114,7 @@ const handleSelect = (value) => {
    letter-spacing: 1px;
    text-transform: uppercase;
    font-weight: 500;
+   user-select: none;
 
    @media (max-width: 1549px) {
       background-color: transparent;
@@ -160,6 +161,7 @@ const handleSelect = (value) => {
    align-items: center;
    justify-content: center;
    padding: 0 30px;
+   user-select: none;
 }
 
 .grid-selector-item:hover {

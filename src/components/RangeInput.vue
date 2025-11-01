@@ -107,10 +107,14 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
 <style scoped>
 .range-input-container {
    border-radius: 4px;
-   min-width: 150px;
+   min-width: 250px;
    display: flex;
    flex-direction: column;
    align-self: stretch;
+
+   @media (max-width: 1549px) {
+      min-width: 150px;
+   }
 }
 
 .range-input-title {
@@ -122,6 +126,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    letter-spacing: 1px;
    text-transform: uppercase;
    font-weight: 500;
+   user-select: none;
 
    @media (max-width: 1549px) {
       background-color: transparent;
@@ -172,6 +177,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    margin-right: 5px;
    text-transform: capitalize;
    letter-spacing: 5px;
+   user-select: none;
 }
 
 .range-input-value-number {
@@ -179,6 +185,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    color: #fff;
    text-transform: capitalize;
    letter-spacing: 3px;
+   user-select: none;
 }
 
 .range-input-wrapper {
@@ -212,6 +219,7 @@ const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
    font-size: 0.75rem;
    color: rgba(255, 255, 255, 0.8);
    font-weight: 400;
+   user-select: none;
 }
 
 .slider-track-container {

@@ -78,11 +78,14 @@ const corpRows = computed(() => {
    width: 30px;
    height: 30px;
    margin-bottom: 5px;
+   user-select: none;
+   pointer-events: none;
 }
 
 .house-body-logo-title {
    font-size: 2rem;
    letter-spacing: 3px;
+   user-select: none;
 }
 
 .house-body-top-title {
@@ -91,6 +94,7 @@ const corpRows = computed(() => {
    padding: 3px 0px;
    letter-spacing: 2px;
    border-bottom: 1px solid #fff;
+   user-select: none;
 }
 
 .house-body-top-num-wrapper {
@@ -121,6 +125,7 @@ const corpRows = computed(() => {
    transition: all 0.3s ease;
    border-radius: 4px;
    text-align: center;
+   user-select: none;
 }
 
 .house-body-top-num:hover {

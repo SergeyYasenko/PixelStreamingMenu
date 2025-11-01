@@ -153,26 +153,38 @@ defineEmits(["close"]);
 .data-blocks-selector {
    position: absolute;
    bottom: 100%;
-   left: 30px;
-   width: 100%;
+   left: 0;
+   right: 0;
    z-index: 10000;
    pointer-events: auto;
+   padding: 0 40px;
    margin-bottom: 5px;
+
+   @media (max-width: 1549px) {
+      padding: 0;
+   }
 }
 
 .data-blocks-header {
    width: 100%;
-   margin-bottom: 20px;
+   margin-bottom: 10px;
    position: relative;
 }
 
 .data-blocks-title {
-   font-family: "Roboto", sans-serif;
-   font-weight: normal;
+   font-family: "PF Stamps Pro Solid", sans-serif;
+   font-weight: bold;
    font-size: 2.375rem;
    color: #fff;
-   letter-spacing: 2px;
+   letter-spacing: 4px;
    text-transform: uppercase;
+   margin-bottom: 10px;
+   user-select: none;
+
+   @media (max-width: 1549px) {
+      margin-bottom: 5px;
+      margin-left: 25px;
+   }
 }
 
 .data-blocks-gradient-line {
@@ -183,12 +195,23 @@ defineEmits(["close"]);
       rgba(255, 255, 255, 1) 0%,
       rgba(255, 255, 255, 0) 100%
    );
+   margin-bottom: 10px;
+
+   @media (max-width: 1549px) {
+      display: none;
+   }
 }
 
 .data-blocks-content {
    display: flex;
    flex-wrap: wrap;
    gap: 45px;
+   max-width: 1400px;
+
+   @media (max-width: 1549px) {
+      gap: 20px;
+      padding: 0 15px;
+   }
 }
 
 .data-block {
@@ -214,6 +237,7 @@ defineEmits(["close"]);
    font-weight: 500;
    text-transform: uppercase;
    letter-spacing: 1px;
+   user-select: none;
 }
 
 .data-block-icon {
@@ -221,6 +245,7 @@ defineEmits(["close"]);
    color: rgba(255, 255, 255, 0.6);
    cursor: pointer;
    transition: color 0.3s ease;
+   user-select: none;
 }
 
 .data-block-icon:hover {
@@ -243,6 +268,7 @@ defineEmits(["close"]);
    transition: color 0.3s ease;
    border-radius: 3px;
    padding-left: 5px;
+   user-select: none;
 }
 
 .data-block-item:hover {

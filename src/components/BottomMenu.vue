@@ -15,9 +15,11 @@
                :style="{ width: item.width, height: item.height }"
                class="bottom-menu-icon"
             />
-            <span class="bottom-menu-text" v-if="item.name">{{
-               item.name
-            }}</span>
+            <span
+               class="bottom-menu-text"
+               v-if="item.name && item.showText !== false"
+               >{{ item.name }}</span
+            >
          </div>
       </div>
       <div class="bottom-menu-company" @click="handleGoodiniClick">
@@ -52,9 +54,11 @@
                :style="{ width: item.width, height: item.height }"
                class="bottom-menu-icon"
             />
-            <span class="bottom-menu-text" v-if="item.name">{{
-               item.name
-            }}</span>
+            <span
+               class="bottom-menu-text"
+               v-if="item.name && item.showText !== false"
+               >{{ item.name }}</span
+            >
          </div>
       </div>
       <div class="bottom-menu-bottom-mobile">
@@ -106,7 +110,9 @@ const showSettings = ref(false);
 const menuItems = ref([
    {
       id: 1,
+      name: "Home",
       icon: "src/assets/icons/bottomMenu/home.png",
+      showText: false, // Скрыть текст для кнопки Home
    },
    {
       id: 2,
@@ -183,6 +189,7 @@ const handleItemClick = (item) => {
       emit("sendToEngine", { courtyard: "" });
    } else if (item.name === "Квартиры") {
       emit("showApartments");
+      emit("sendToEngine", { rooms: "" });
    } else if (item.name === "Курсор") {
       emit("sendToEngine", { cursor: "" });
    } else if (item.name === "Next mode") {
@@ -245,6 +252,7 @@ const handleGoodiniSendToEngine = (data) => {
    padding: 0 15px;
    transition: all 0.3s ease;
    border-right: 1px solid rgba(255, 255, 255, 0.3);
+   user-select: none;
    @media (max-width: 1549px) {
       height: 40px;
    }
@@ -264,6 +272,8 @@ const handleGoodiniSendToEngine = (data) => {
    height: 26px;
    filter: brightness(0) invert(1);
    margin-right: 5px;
+   user-select: none;
+   pointer-events: none;
 }
 
 .bottom-menu-text {
@@ -272,6 +282,7 @@ const handleGoodiniSendToEngine = (data) => {
    text-align: center;
    letter-spacing: 1px;
    text-wrap: nowrap;
+   user-select: none;
 }
 
 .bottom-menu-company {
@@ -286,6 +297,7 @@ const handleGoodiniSendToEngine = (data) => {
    margin-right: 40px;
    cursor: pointer;
    transition: opacity 0.3s ease;
+   user-select: none;
 }
 
 .goodini-settings-container {

@@ -514,7 +514,7 @@ onUnmounted(() => {
 // Function to send single weather data field to engine
 const sendSingleWeatherField = (key, value) => {
    const weatherData = {
-      Weather: {
+      weather: {
          [key]: value,
       },
    };
@@ -627,6 +627,7 @@ onMounted(() => {
    z-index: 2;
    padding: 0 10px;
    flex-shrink: 0;
+   user-select: none;
 }
 
 .section-title-line-left,
@@ -650,6 +651,7 @@ onMounted(() => {
    font-weight: bold;
    color: #fff;
    margin: 0 20px;
+   user-select: none;
 }
 
 .time-controls {
@@ -667,6 +669,7 @@ onMounted(() => {
    color: rgba(255, 255, 255, 0.7);
    pointer-events: auto;
    transition: all 0.3s ease;
+   user-select: none;
 }
 
 .time-arrow:hover {
@@ -741,6 +744,7 @@ onMounted(() => {
    align-items: center;
    justify-content: space-between;
    gap: 5px;
+   user-select: none;
 }
 
 .date-field:hover {
@@ -751,6 +755,7 @@ onMounted(() => {
 .dropdown-arrow {
    font-size: 0.625rem;
    color: rgba(255, 255, 255, 0.6);
+   user-select: none;
 }
 
 .dropdown-menu {
@@ -775,6 +780,7 @@ onMounted(() => {
    padding: 5px 5px 5px 15px;
    border-radius: 4px;
    transition: all 0.3s ease;
+   user-select: none;
 }
 
 .dropdown-item:hover {
@@ -857,6 +863,7 @@ onMounted(() => {
    font-size: 0.75rem;
    color: rgba(255, 255, 255, 0.6);
    text-wrap: nowrap;
+   user-select: none;
 }
 
 .field-value {
@@ -900,6 +907,7 @@ onMounted(() => {
    cursor: pointer;
    transition: all 0.3s ease;
    margin-bottom: 20px;
+   user-select: none;
 }
 
 .weather-display:hover {
@@ -914,11 +922,13 @@ onMounted(() => {
    display: flex;
    align-items: center;
    gap: 8px;
+   user-select: none;
 }
 
 .weather-arrow {
    color: rgba(255, 255, 255, 0.6);
    flex-shrink: 0;
+   user-select: none;
 }
 
 .weather-dropdown {
@@ -936,5 +946,7 @@ onMounted(() => {
 .weather-icon {
    width: 50px;
    height: 50px;
+   user-select: none;
+   pointer-events: none;
 }
 </style>

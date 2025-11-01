@@ -169,6 +169,7 @@ const handleArrowClick = (direction) => {
    width: 36px;
    height: 36px;
    transition: transform 0.3s ease;
+   user-select: none;
 }
 
 .display-positioning-btn:hover {
@@ -181,6 +182,8 @@ const handleArrowClick = (direction) => {
    padding: 10px;
    background-color: rgba(0, 0, 0, 0.3);
    border-radius: 4px;
+   user-select: none;
+   pointer-events: none;
 }
 
 .display-positioning-btn-items {
@@ -220,6 +223,7 @@ const handleArrowClick = (direction) => {
    cursor: pointer;
    transition: all 0.3s ease;
    white-space: nowrap;
+   user-select: none;
 }
 
 .display-positioning-btn-item:hover {
@@ -234,6 +238,8 @@ const handleArrowClick = (direction) => {
    width: 40px;
    height: 40px;
    filter: brightness(0) invert(1);
+   user-select: none;
+   pointer-events: none;
 }
 
 .display-positioning-btn-item-text {
@@ -244,6 +250,7 @@ const handleArrowClick = (direction) => {
    letter-spacing: 1px;
    background-color: rgba(0, 0, 0);
    padding: 0 5px;
+   user-select: none;
 }
 
 /* Навигационные стрелки */
@@ -267,6 +274,7 @@ const handleArrowClick = (direction) => {
    pointer-events: auto;
    color: #fff;
    transition: opacity 0.3s ease;
+   user-select: none;
 }
 
 .arrow:hover {

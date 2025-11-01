@@ -239,6 +239,7 @@ const handleAvailabilityClick = (value) => {
    text-transform: uppercase;
    font-family: "PF Stamps Pro Solid", sans-serif;
    margin-bottom: 10px;
+   user-select: none;
 
    @media (max-width: 1549px) {
       margin-bottom: 5px;
