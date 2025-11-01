@@ -51,7 +51,7 @@
             @sendToEngine="handleSendToEngine"
          />
          <DataBlocksSelector
-            v-show="showDataBlocks"
+            v-if="showDataBlocks"
             :selected-type="dataBlocksType"
             :external-data="externalDataBlocks"
             @close="hideDataBlocksSelector"
@@ -251,6 +251,9 @@ const showDataBlocksSelector = (type) => {
    showFloors.value = false;
    showApartmentSelector.value = false;
    showWeatherTime.value = false;
+   // Очищаем старые данные перед открытием нового типа
+   externalDataBlocks.value = [];
+   console.log("🔄 Clearing externalDataBlocks for new type:", type);
    // Устанавливаем тип данных и открываем компонент
    dataBlocksType.value = type;
    showDataBlocks.value = true;
@@ -258,6 +261,9 @@ const showDataBlocksSelector = (type) => {
 
 const hideDataBlocksSelector = () => {
    showDataBlocks.value = false;
+   // Очищаем данные при закрытии
+   externalDataBlocks.value = [];
+   console.log("🧹 Clearing externalDataBlocks on close");
 };
 
 const showGoodiniSettingsSelector = () => {
