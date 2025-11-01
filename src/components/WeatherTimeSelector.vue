@@ -243,8 +243,8 @@
                class="dropdown-menu weather-dropdown weather-dropdown-up"
             >
                <div
-                  v-for="weather in weatherOptions"
-                  :key="weather.id"
+                  v-for="(weather, index) in weatherOptions"
+                  :key="index"
                   class="dropdown-item"
                   @click="selectWeather(weather)"
                >
@@ -319,32 +319,27 @@ const years = Array.from({ length: 10 }, (_, i) => (2021 + i).toString());
 
 const weatherOptions = [
    {
-      id: 1,
       name: "CLEAR SKIES",
       image: "/src/assets/icons/weather/Clear_Skies.png",
    },
    {
-      id: 2,
       name: "PARTLY CLOUDY",
       image: "/src/assets/icons/weather/PartlyCloudy.png",
    },
    {
-      id: 3,
       name: "CLOUDY",
       image: "/src/assets/icons/weather/Cloudy.png",
    },
+
    {
-      id: 4,
       name: "RAINY",
       image: "/src/assets/icons/weather/Rain.png",
    },
    {
-      id: 5,
       name: "STORMY",
       image: "/src/assets/icons/weather/Thunderstorms.png",
    },
    {
-      id: 6,
       name: "SNOWY",
       image: "/src/assets/icons/weather/Snow.png",
    },
