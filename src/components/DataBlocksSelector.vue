@@ -130,9 +130,19 @@ const dataTypes = {
 
 // Вычисляемое свойство для получения текущих данных
 const currentData = computed(() => {
+   console.log("=== DataBlocksSelector Debug ===");
+   console.log("selectedType:", props.selectedType);
+   console.log("externalData from UE:", props.externalData);
+   console.log("externalData length:", props.externalData?.length);
+
    // Если есть внешние данные из Unreal Engine, используем их
    if (props.externalData && props.externalData.length > 0) {
-      return {
+      console.log("✅ Using EXTERNAL data from Unreal Engine");
+      const processedData = {
+         title:
+            props.externalData[0]?.title ||
+            dataTypes[props.selectedType]?.title ||
+            "NO TITLE",
          blocks: props.externalData.map((block, index) => ({
             id: index,
             title: block.list,
@@ -142,8 +152,15 @@ const currentData = computed(() => {
             })),
          })),
       };
+      console.log("Processed external data:", processedData);
+      return processedData;
    }
-   return dataTypes[props.selectedType] || dataTypes.infrastructure;
+
+   console.log("📦 Using LOCAL data from dataTypes");
+   const localData = dataTypes[props.selectedType] || dataTypes.infrastructure;
+   console.log("Local data structure:", localData);
+   console.log("================================");
+   return localData;
 });
 
 defineEmits(["close"]);

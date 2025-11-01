@@ -95,20 +95,42 @@ const externalDataBlocks = ref([]);
 watch(
    () => props.lastMessage,
    (newMessage) => {
-      if (!newMessage) return;
+      console.log("=== ConnectedDisplay Message Watch ===");
+      console.log("Raw message from UE:", newMessage);
+
+      if (!newMessage) {
+         console.log("❌ Empty message, skipping");
+         return;
+      }
 
       try {
          const data = JSON.parse(newMessage);
+         console.log("✅ Parsed JSON data:", data);
+         console.log("Has 'list' property:", !!data.list);
+         console.log("Has 'items' property:", !!data.items);
+         console.log("Items is array:", Array.isArray(data.items));
+
          // Проверяем, содержит ли сообщение структуру с list и items
          if (data.list && data.items && Array.isArray(data.items)) {
+            console.log("✅ Valid structure! Adding to externalDataBlocks");
             externalDataBlocks.value.push({
                list: data.list,
                items: data.items,
             });
+            console.log(
+               "Current externalDataBlocks:",
+               externalDataBlocks.value
+            );
+         } else {
+            console.log("⚠️ Data structure doesn't match expected format");
+            console.log("Expected: { list: string, items: array }");
+            console.log("Got:", data);
          }
       } catch (error) {
-         // Не JSON или некорректный JSON - игнорируем
+         console.log("❌ JSON parse error:", error.message);
+         console.log("Message was not valid JSON");
       }
+      console.log("=====================================");
    }
 );
 

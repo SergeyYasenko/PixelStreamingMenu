@@ -177,6 +177,7 @@ const handleItemClick = (item) => {
       emit("sendToEngine", { home: "" });
    } else if (item.name === "Скрыть") {
       emit("hide");
+      emit("sendToEngine", { hide: "" });
    } else if (item.name === "Погода и время") {
       emit("showWeatherTime");
    } else if (item.name === "Сезон") {
