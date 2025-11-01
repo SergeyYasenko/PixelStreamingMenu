@@ -19,6 +19,7 @@
                   v-for="item in block.items"
                   :key="item.id"
                   class="data-block-item"
+                  @click="handleItemClick(item)"
                >
                   {{ item.name }}
                </div>
@@ -163,7 +164,14 @@ const currentData = computed(() => {
    return localData;
 });
 
-defineEmits(["close"]);
+const emit = defineEmits(["close", "sendToEngine"]);
+
+// Обработчик клика по элементу
+const handleItemClick = (item) => {
+   console.log("🖱️ Item clicked:", item);
+   console.log("Sending to UE - id:", item.id);
+   emit("sendToEngine", { id: String(item.id) });
+};
 </script>
 
 <style scoped>

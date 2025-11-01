@@ -55,6 +55,7 @@
             :selected-type="dataBlocksType"
             :external-data="externalDataBlocks"
             @close="hideDataBlocksSelector"
+            @sendToEngine="handleSendToEngine"
          />
       </div>
    </div>

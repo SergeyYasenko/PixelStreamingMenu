@@ -604,6 +604,10 @@ onMounted(() => {
    margin-bottom: 5px;
 }
 
+.section:first-child {
+   margin-bottom: 15px;
+}
+
 .section:last-child {
    margin-bottom: 0;
 }
