@@ -330,18 +330,45 @@ const weatherOptions = [
       name: "CLOUDY",
       image: "/src/assets/icons/weather/Cloudy.png",
    },
-
    {
-      name: "RAINY",
+      name: "OVERCAST",
+      image: "/src/assets/icons/weather/Overcast.png",
+   },
+   {
+      name: "FOGGY",
+      image: "/src/assets/icons/weather/Fog.png",
+   },
+   {
+      name: "RAIN LIGHT",
+      image: "/src/assets/icons/weather/LightRain.png",
+   },
+   {
+      name: "RAIN",
       image: "/src/assets/icons/weather/Rain.png",
    },
    {
-      name: "STORMY",
+      name: "RAIN THUNDERSTORM",
       image: "/src/assets/icons/weather/Thunderstorms.png",
    },
    {
-      name: "SNOWY",
+      name: "SNOW LIGHT",
+      image: "/src/assets/icons/weather/Light_Snow.png",
+   },
+   {
+      name: "SNOW",
       image: "/src/assets/icons/weather/Snow.png",
+   },
+   {
+      name: "SNOW BLIZZARD",
+      image: "/src/assets/icons/weather/Blizzard.png",
+   },
+   {
+      name: "SAND DUST CALM",
+      image: "/src/assets/icons/weather/Dust.png",
+   },
+   {
+      name: "SAND DUST STORM",
+      image: "/src/assets/icons/weather/DustStorm.png",
    },
 ];
 

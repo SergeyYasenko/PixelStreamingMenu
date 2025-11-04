@@ -147,8 +147,12 @@ const sendJsonData = () => {
 };
 
 const sendToEngine = (data) => {
+   console.log("🎮 sendToEngine вызван, данные:", data);
    if (pixelStreaming) {
+      console.log("✅ Отправляем через pixelStreaming.emitUIInteraction");
       pixelStreaming.emitUIInteraction(data);
+   } else {
+      console.error("❌ pixelStreaming не инициализирован!");
    }
 };
 

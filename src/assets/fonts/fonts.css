@@ -22,6 +22,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Fira Sans Condensed';
+  src: url('./FiraSansCondensed-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Основные стили шрифтов */
 body {
   font-family: 'Wow Games Sans', sans-serif;

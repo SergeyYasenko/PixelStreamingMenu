@@ -18,6 +18,15 @@
          </div>
          <DisplayPositioning @sendToEngine="handleSendToEngine" />
       </div>
+
+      <!-- Карточка квартиры -->
+      <ApartmentCard
+         :apartment-data="apartmentCardData"
+         :is-visible="showApartmentCard"
+         @close="handleCloseApartmentCard"
+         @apartments="handleFirstPersonView"
+      />
+
       <div class="bottom-menu-wrapper">
          <BottomMenu
             @hide="hideAllMenus"
@@ -70,6 +79,7 @@ import DisplayPositioning from "./DisplayPositioning.vue";
 import ApartmentSelector from "./ApartmentSelector.vue";
 import WeatherTimeSelector from "./WeatherTimeSelector.vue";
 import DataBlocksSelector from "./DataBlocksSelector.vue";
+import ApartmentCard from "./ApartmentCard.vue";
 
 const props = defineProps({
    lastMessage: {
@@ -92,46 +102,40 @@ const emit = defineEmits([
 // Данные из Unreal Engine для DataBlocksSelector
 const externalDataBlocks = ref([]);
 
+// Данные карточки квартиры
+const apartmentCardData = ref(null);
+const showApartmentCard = ref(false);
+
 // Обработка данных из Unreal Engine
 watch(
    () => props.lastMessage,
    (newMessage) => {
-      console.log("=== ConnectedDisplay Message Watch ===");
-      console.log("Raw message from UE:", newMessage);
-
-      if (!newMessage) {
-         console.log("❌ Empty message, skipping");
-         return;
-      }
+      if (!newMessage) return;
 
       try {
          const data = JSON.parse(newMessage);
-         console.log("✅ Parsed JSON data:", data);
-         console.log("Has 'list' property:", !!data.list);
-         console.log("Has 'items' property:", !!data.items);
-         console.log("Items is array:", Array.isArray(data.items));
+
+         // Проверка данных квартиры
+         // Если есть Img и хотя бы одно поле данных (Surface или Price)
+         if (
+            data.Img !== undefined &&
+            (data.Surface !== undefined || data.Price !== undefined)
+         ) {
+            apartmentCardData.value = data;
+            showApartmentCard.value = true;
+            return;
+         }
 
          // Проверяем, содержит ли сообщение структуру с list и items
          if (data.list && data.items && Array.isArray(data.items)) {
-            console.log("✅ Valid structure! Adding to externalDataBlocks");
             externalDataBlocks.value.push({
                list: data.list,
                items: data.items,
             });
-            console.log(
-               "Current externalDataBlocks:",
-               externalDataBlocks.value
-            );
-         } else {
-            console.log("⚠️ Data structure doesn't match expected format");
-            console.log("Expected: { list: string, items: array }");
-            console.log("Got:", data);
          }
       } catch (error) {
-         console.log("❌ JSON parse error:", error.message);
-         console.log("Message was not valid JSON");
+         // Игнорируем ошибки парсинга
       }
-      console.log("=====================================");
    }
 );
 
@@ -184,12 +188,17 @@ const selectCorp = (corpId) => {
    apartmentSelectedFloor.value = 13;
    showApartmentSelector.value = true;
 
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
+
    // Отправляем данные на Unreal Engine
    emit("sendToEngine", { buildings: String(corpId) });
 };
 
 const selectFloor = (floorId) => {
    selectedFloor.value = floorId;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
    // Отправляем данные на Unreal Engine
    emit("sendToEngine", { floor: String(floorId) });
 };
@@ -206,11 +215,15 @@ const handleApartmentCorpSelect = (corpId) => {
    apartmentSelectedCorp.value = corpId;
    apartmentSelectedFloor.value = 13;
    showApartmentSelector.value = true;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
    // НЕ влияем на верхний CorpSelector
 };
 
 const handleApartmentFloorSelect = (floorId) => {
    apartmentSelectedFloor.value = floorId;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
 };
 
 // Метод для скрытия всех меню и сброса значений
@@ -220,6 +233,9 @@ const hideAllMenus = () => {
    showApartmentSelector.value = false;
    showWeatherTime.value = false;
    showDataBlocks.value = false;
+
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
 
    // Сбрасываем значения на дефолтные независимо
    // Верхний CorpSelector
@@ -239,6 +255,8 @@ const showWeatherTimeSelector = () => {
    showFloors.value = false;
    showApartmentSelector.value = false;
    showDataBlocks.value = false;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
    // Открываем компонент погоды и времени
    showWeatherTime.value = true;
 };
@@ -252,9 +270,10 @@ const showDataBlocksSelector = (type) => {
    showFloors.value = false;
    showApartmentSelector.value = false;
    showWeatherTime.value = false;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
    // Очищаем старые данные перед открытием нового типа
    externalDataBlocks.value = [];
-   console.log("🔄 Clearing externalDataBlocks for new type:", type);
    // Устанавливаем тип данных и открываем компонент
    dataBlocksType.value = type;
    showDataBlocks.value = true;
@@ -264,7 +283,6 @@ const hideDataBlocksSelector = () => {
    showDataBlocks.value = false;
    // Очищаем данные при закрытии
    externalDataBlocks.value = [];
-   console.log("🧹 Clearing externalDataBlocks on close");
 };
 
 const showGoodiniSettingsSelector = () => {
@@ -273,6 +291,8 @@ const showGoodiniSettingsSelector = () => {
    showApartmentSelector.value = false;
    showWeatherTime.value = false;
    showDataBlocks.value = false;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
 };
 
 const showApartmentsSelector = () => {
@@ -280,18 +300,41 @@ const showApartmentsSelector = () => {
    showFloors.value = false;
    showWeatherTime.value = false;
    showDataBlocks.value = false;
+   // Закрываем карточку квартиры
+   handleCloseApartmentCard();
    // Открываем ApartmentSelector
    showApartmentSelector.value = true;
 };
 
 const handleQualitySelected = (quality) => {
    // Позже будем передавать на Unreal Engine через Pixel Streaming
-   console.log(`Quality setting selected: ${quality}`);
    // Здесь можно добавить отправку данных в Unreal Engine
 };
 
 const handleSendToEngine = (data) => {
+   // Закрываем карточку квартиры при любом взаимодействии с другими элементами
+   // (кроме apartments, так как это обрабатывается отдельно в handleFirstPersonView)
+   if (showApartmentCard.value && !data.hasOwnProperty("apartments")) {
+      handleCloseApartmentCard();
+   }
    emit("sendToEngine", data);
+};
+
+// Обработчики для карточки квартиры
+const handleCloseApartmentCard = () => {
+   showApartmentCard.value = false;
+   setTimeout(() => {
+      apartmentCardData.value = null;
+   }, 300);
+};
+
+const handleFirstPersonView = (data) => {
+   console.log("🚀 handleFirstPersonView вызван, данные:", data);
+   const payload = { apartments: "" };
+   console.log("📤 Отправляем в UE:", payload);
+   // Закрываем карточку после перехода в режим первого лица
+   handleCloseApartmentCard();
+   emit("sendToEngine", payload);
 };
 </script>
 
