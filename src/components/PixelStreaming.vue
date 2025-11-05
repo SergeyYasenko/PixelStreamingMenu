@@ -78,34 +78,34 @@ const cursorY = ref(0);
 let pixelStreaming = null;
 let videoElement = null;
 
-// Обработка движения мыши - обновляем позицию инвертированного курсора
+// Обработка движения мыши - курсор следует за реальной позицией
 const handleMouseMove = (e) => {
    if (!isConnected.value || !videoContainer.value) return;
 
    const rect = videoContainer.value.getBoundingClientRect();
-   const centerX = rect.width / 2;
-   const centerY = rect.height / 2;
 
-   // Вычисляем смещение от центра
-   const offsetX = e.clientX - rect.left - centerX;
-   const offsetY = e.clientY - rect.top - centerY;
-
-   // Инвертируем относительно центра (только X)
-   const mirroredX = centerX - offsetX;
-   const mirroredY = centerY + offsetY; // Y не инвертируем
-
-   cursorX.value = mirroredX;
-   cursorY.value = mirroredY;
+   // Курсор точно на месте реального курсора пользователя
+   cursorX.value = e.clientX - rect.left;
+   cursorY.value = e.clientY - rect.top;
 
    showMirrorCursor.value = true;
 };
 
-// Генерируем клик в позиции инвертированного курсора
+// Генерируем клик в инвертированной позиции относительно центра
 const generateMirroredClick = (originalEvent, eventType = "click") => {
    if (!videoElement) return;
 
    const rect = videoContainer.value.getBoundingClientRect();
-   const mirroredClientX = rect.left + cursorX.value;
+   const centerX = rect.width / 2;
+
+   // Вычисляем смещение курсора от центра
+   const offsetX = cursorX.value - centerX;
+
+   // Инвертируем X-координату относительно центра
+   const mirroredX = centerX - offsetX;
+
+   // Абсолютные координаты для клика
+   const mirroredClientX = rect.left + mirroredX;
    const mirroredClientY = rect.top + cursorY.value;
 
    const eventOptions = {
