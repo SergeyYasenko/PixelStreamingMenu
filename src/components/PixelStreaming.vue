@@ -64,6 +64,9 @@ const mirrorEnabled = ref(false);
 let pixelStreaming = null;
 let videoElement = null;
 
+// WeakSet для отслеживания уже обработанных событий (предотвращение рекурсии)
+const processedEvents = new WeakSet();
+
 // Переключение зеркалирования
 const toggleMirror = () => {
    mirrorEnabled.value = !mirrorEnabled.value;
@@ -81,6 +84,9 @@ const updateMirrorTransform = () => {
 // Обработчик для перехвата и инвертирования координат
 function captureHandler(e) {
    if (!mirrorEnabled.value || !videoContainer.value) return;
+
+   // Пропускаем уже обработанные события (избегаем рекурсии)
+   if (processedEvents.has(e)) return;
 
    // Проверяем, что событие произошло внутри video контейнера
    if (!videoContainer.value.contains(e.target)) return;
@@ -118,12 +124,19 @@ function captureHandler(e) {
       isPrimary: true,
    };
 
-   // Пытаемся создать PointerEvent, если не получается - MouseEvent
+   // Создаем новое событие
+   let newEvent;
    try {
-      videoContainer.value.dispatchEvent(new PointerEvent(e.type, opts));
+      newEvent = new PointerEvent(e.type, opts);
    } catch (error) {
-      videoContainer.value.dispatchEvent(new MouseEvent(e.type, opts));
+      newEvent = new MouseEvent(e.type, opts);
    }
+
+   // Помечаем событие как обработанное ДО отправки
+   processedEvents.add(newEvent);
+
+   // Отправляем новое событие
+   videoContainer.value.dispatchEvent(newEvent);
 }
 
 // Настройка перехвата событий
