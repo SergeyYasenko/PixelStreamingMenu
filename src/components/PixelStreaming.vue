@@ -91,6 +91,11 @@ function captureHandler(e) {
    // Проверяем, что событие произошло внутри video контейнера
    if (!videoContainer.value.contains(e.target)) return;
 
+   // Временное логирование для отладки (можно удалить потом)
+   if (e.type === "mousemove" && Math.random() < 0.01) {
+      console.log("🖱️ Инвертируем mousemove");
+   }
+
    const rect = videoContainer.value.getBoundingClientRect();
    if (rect.width === 0) return;
 
@@ -135,7 +140,8 @@ function captureHandler(e) {
    // Помечаем событие как обработанное ДО отправки
    processedEvents.add(newEvent);
 
-   // Отправляем новое событие
+   // Отправляем новое событие на VIDEOCONTAINER (как в оригинальном HTML на playerEl)
+   // Важно: отправляем на контейнер, а не на e.target
    videoContainer.value.dispatchEvent(newEvent);
 }
 
@@ -231,8 +237,6 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
-         // Настраиваем перехват событий
-         setupEventCapture();
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
@@ -304,7 +308,7 @@ const sendToEngine = (data) => {
 };
 
 onMounted(() => {
-   // Можно добавить инициализацию из URL параметров
+   // Инициализация из URL параметров
    const params = new URLSearchParams(window.location.search);
    const mirrorParam = params.get("mirror");
    if (
@@ -314,6 +318,10 @@ onMounted(() => {
    ) {
       mirrorEnabled.value = true;
    }
+
+   // Настраиваем перехват событий СРАЗУ при монтировании
+   // Это важно: обработчики должны быть установлены ДО того, как библиотека установит свои
+   setupEventCapture();
 });
 
 onBeforeUnmount(() => {
