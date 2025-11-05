@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount, onMounted } from "vue";
+import { ref, onBeforeUnmount } from "vue";
 import {
    PixelStreaming,
    Config,
@@ -56,7 +56,92 @@ const receivedMessages = ref([]);
 const lastMessage = ref("");
 
 let pixelStreaming = null;
-const mirrorEnabled = ref(true); // Зеркалирование включено по умолчанию
+
+// Функция для инвертирования координат мыши по оси X
+const invertMouseCoordinates = (event) => {
+   const target = event.target;
+   const rect = target.getBoundingClientRect();
+   const centerX = rect.width / 2;
+   const relativeX = event.clientX - rect.left;
+   const invertedX = rect.width - relativeX;
+
+   return {
+      clientX: rect.left + invertedX,
+      clientY: event.clientY,
+   };
+};
+
+// Перехват событий мыши для инвертирования координат
+const setupMouseInterception = () => {
+   const observer = new MutationObserver(() => {
+      const video = videoContainer.value?.querySelector("video");
+      if (video && !video.dataset.intercepted) {
+         video.dataset.intercepted = "true";
+
+         // Перехватываем все события мыши
+         const events = [
+            "mousedown",
+            "mouseup",
+            "mousemove",
+            "click",
+            "dblclick",
+         ];
+
+         events.forEach((eventType) => {
+            video.addEventListener(
+               eventType,
+               (e) => {
+                  // Пропускаем уже обработанные события
+                  if (e.inverted) {
+                     return;
+                  }
+
+                  // Останавливаем оригинальное событие
+                  e.preventDefault();
+                  e.stopImmediatePropagation();
+
+                  const inverted = invertMouseCoordinates(e);
+
+                  // Создаем новое событие с инвертированными координатами
+                  const newEvent = new MouseEvent(eventType, {
+                     bubbles: e.bubbles,
+                     cancelable: e.cancelable,
+                     view: e.view,
+                     detail: e.detail,
+                     screenX: e.screenX,
+                     screenY: e.screenY,
+                     clientX: inverted.clientX,
+                     clientY: inverted.clientY,
+                     ctrlKey: e.ctrlKey,
+                     altKey: e.altKey,
+                     shiftKey: e.shiftKey,
+                     metaKey: e.metaKey,
+                     button: e.button,
+                     buttons: e.buttons,
+                     relatedTarget: e.relatedTarget,
+                  });
+
+                  // Помечаем событие как обработанное
+                  newEvent.inverted = true;
+
+                  // Отправляем новое событие
+                  video.dispatchEvent(newEvent);
+               },
+               true
+            ); // Используем capture фазу
+         });
+
+         observer.disconnect();
+      }
+   });
+
+   if (videoContainer.value) {
+      observer.observe(videoContainer.value, {
+         childList: true,
+         subtree: true,
+      });
+   }
+};
 
 const connect = async () => {
    if (!signallingUrl.value) {
@@ -88,6 +173,8 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
+         // Настраиваем перехват координат мыши после подключения
+         setTimeout(() => setupMouseInterception(), 100);
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
@@ -157,90 +244,7 @@ const sendToEngine = (data) => {
    }
 };
 
-// Обработчик зеркалирования кликов
-function captureHandler(e) {
-   if (!mirrorEnabled.value) return;
-
-   const playerEl = videoContainer.value?.querySelector("video");
-   if (!playerEl || !playerEl.contains(e.target)) return;
-
-   const rect = playerEl.getBoundingClientRect();
-   if (rect.width === 0) return;
-
-   let clientX = e.clientX,
-      clientY = e.clientY;
-   if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-   }
-
-   // Зеркальное преобразование координаты X
-   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
-   e.stopImmediatePropagation();
-   e.preventDefault();
-
-   const opts = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      clientX: mirroredClientX, // Используем зеркальную координату
-      clientY: clientY,
-      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
-      button: e.button || 0,
-      buttons: e.buttons || 0,
-      pointerId: e.pointerId || 1,
-      isPrimary: true,
-   };
-
-   try {
-      playerEl.dispatchEvent(new PointerEvent(e.type, opts));
-   } catch {
-      playerEl.dispatchEvent(new MouseEvent(e.type, opts));
-   }
-}
-
-// Установка обработчиков событий для зеркалирования
-onMounted(() => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   events.forEach((ev) => {
-      document.addEventListener(ev, captureHandler, {
-         capture: true,
-         passive: false,
-      });
-   });
-});
-
 onBeforeUnmount(() => {
-   // Удаляем обработчики событий
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   events.forEach((ev) => {
-      document.removeEventListener(ev, captureHandler, { capture: true });
-   });
-
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
