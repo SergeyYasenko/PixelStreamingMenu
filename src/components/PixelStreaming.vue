@@ -5,7 +5,7 @@
          Mirror: {{ mirrorEnabled ? "ON" : "OFF" }}
       </button>
 
-      <div class="video-wrapper">
+      <div ref="videoWrapper" class="video-wrapper">
          <div ref="videoContainer" class="video-container"></div>
 
          <div v-if="!isConnected" class="overlay">
@@ -32,15 +32,16 @@
                </div>
             </div>
          </div>
-
-         <ConnectedDisplay
-            v-if="isConnected"
-            :last-message="lastMessage"
-            :received-messages="receivedMessages"
-            @send-data="sendJsonData"
-            @send-to-engine="sendToEngine"
-         />
       </div>
+
+      <!-- ConnectedDisplay вынесен за пределы video-wrapper -->
+      <ConnectedDisplay
+         v-if="isConnected"
+         :last-message="lastMessage"
+         :received-messages="receivedMessages"
+         @send-data="sendJsonData"
+         @send-to-engine="sendToEngine"
+      />
    </div>
 </template>
 
@@ -53,6 +54,7 @@ import {
 import ConnectedDisplay from "./ConnectedDisplay.vue";
 
 const videoContainer = ref(null);
+const videoWrapper = ref(null);
 const signallingUrl = ref("ws://localhost:80");
 const isConnected = ref(false);
 const isConnecting = ref(false);
@@ -83,21 +85,59 @@ const updateMirrorTransform = () => {
 
 // Обработчик для перехвата и инвертирования координат
 function captureHandler(e) {
-   if (!mirrorEnabled.value || !videoContainer.value) return;
-
-   // Пропускаем уже обработанные события (избегаем рекурсии)
-   if (processedEvents.has(e)) return;
-
-   // Проверяем, что событие произошло внутри video контейнера
-   if (!videoContainer.value.contains(e.target)) return;
-
-   // Временное логирование для отладки (можно удалить потом)
-   if (e.type === "mousemove" && Math.random() < 0.01) {
-      console.log("🖱️ Инвертируем mousemove");
+   // Детальное логирование для отладки
+   if (e.type === "mousedown" || e.type === "pointerdown") {
+      console.log("=== КЛИК ===");
+      console.log("mirrorEnabled:", mirrorEnabled.value);
+      console.log("videoWrapper:", !!videoWrapper.value);
+      console.log("target:", e.target);
+      console.log("target.tagName:", e.target.tagName);
+      console.log("target.className:", e.target.className);
    }
 
-   const rect = videoContainer.value.getBoundingClientRect();
+   if (!mirrorEnabled.value || !videoWrapper.value) {
+      return;
+   }
+
+   // Пропускаем уже обработанные события - они должны пройти дальше без остановки
+   if (processedEvents.has(e)) {
+      if (e.type === "mousedown" || e.type === "pointerdown") {
+         console.log(
+            "♻️ Обработанное событие - пропускаем дальше к библиотеке"
+         );
+      }
+      return; // Просто выходим, не останавливая событие
+   }
+
+   // Пропускаем клики по кнопке Mirror
+   if (e.target.classList && e.target.classList.contains("mirror-toggle")) {
+      console.log("🔘 Клик по кнопке Mirror, пропускаем");
+      return;
+   }
+
+   // Проверяем, что событие произошло внутри video-wrapper
+   const isInside = videoWrapper.value.contains(e.target);
+
+   if (e.type === "mousedown" || e.type === "pointerdown") {
+      console.log("📍 Target внутри videoWrapper:", isInside);
+   }
+
+   if (!isInside) {
+      console.log("❌ Target НЕ внутри videoWrapper");
+      return;
+   }
+
+   const rect = videoWrapper.value.getBoundingClientRect();
    if (rect.width === 0) return;
+
+   console.log(
+      "✅ ИНВЕРТИРУЕМ:",
+      e.type,
+      "X:",
+      e.clientX,
+      "→",
+      rect.left + rect.width - (e.clientX - rect.left)
+   );
 
    let clientX = e.clientX;
    let clientY = e.clientY;
@@ -140,9 +180,14 @@ function captureHandler(e) {
    // Помечаем событие как обработанное ДО отправки
    processedEvents.add(newEvent);
 
-   // Отправляем новое событие на VIDEOCONTAINER (как в оригинальном HTML на playerEl)
-   // Важно: отправляем на контейнер, а не на e.target
-   videoContainer.value.dispatchEvent(newEvent);
+   // Находим video элемент и отправляем событие на него
+   const video = videoContainer.value?.querySelector("video");
+   if (video) {
+      console.log("📤 Отправляем инвертированное событие на VIDEO элемент");
+      video.dispatchEvent(newEvent);
+   } else {
+      console.warn("⚠️ Video элемент не найден!");
+   }
 }
 
 // Настройка перехвата событий
@@ -160,14 +205,20 @@ const setupEventCapture = () => {
       "touchend",
    ];
 
+   console.log("🔧 Устанавливаем перехват событий на document...");
+
    events.forEach((eventType) => {
       document.addEventListener(eventType, captureHandler, {
          capture: true,
          passive: false,
       });
+      console.log("   ➕ Добавлен перехват:", eventType);
    });
 
-   console.log("✅ Mirror event capture enabled");
+   console.log(
+      "✅ Mirror event capture enabled - всего событий:",
+      events.length
+   );
 };
 
 // Удаление перехвата событий
