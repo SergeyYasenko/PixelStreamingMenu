@@ -64,55 +64,90 @@ const mirrorEnabled = ref(false);
 
 let pixelStreaming = null;
 let videoElement = null;
-let originalAddEventListener = null;
 
-// Патчим video элемент чтобы обернуть все handler'ы библиотеки
-const patchVideoElement = (video) => {
-   originalAddEventListener = video.addEventListener.bind(video);
+// Перехват координат - ТОЧНАЯ КОПИЯ из HTML кода
+function captureHandler(e) {
+   if (!mirrorEnabled.value) return;
 
-   video.addEventListener = function (type, listener, options) {
-      const mouseEvents = [
-         "pointerdown",
-         "pointerup",
-         "pointermove",
-         "mousedown",
-         "mouseup",
-         "mousemove",
-      ];
+   const playerEl = videoContainer.value;
+   if (!playerEl || !playerEl.contains(e.target)) return;
 
-      if (mouseEvents.includes(type) && typeof listener === "function") {
-         // Оборачиваем listener - ВСЕГДА инвертируем координаты
-         const wrappedListener = function (e) {
-            const rect = video.getBoundingClientRect();
-            const relativeX = e.clientX - rect.left;
-            const mirroredClientX = rect.left + rect.width - relativeX;
+   const rect = playerEl.getBoundingClientRect();
+   if (rect.width === 0) return;
 
-            // Создаем прокси с инвертированными координатами
-            const proxiedEvent = new Proxy(e, {
-               get(target, prop) {
-                  if (prop === "clientX") return mirroredClientX;
-                  if (prop === "offsetX") return rect.width - relativeX;
-                  if (prop === "x") return mirroredClientX;
-                  if (prop === "pageX") return mirroredClientX + window.scrollX;
+   let clientX = e.clientX,
+      clientY = e.clientY;
+   if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+   }
 
-                  const value = target[prop];
-                  if (typeof value === "function") {
-                     return value.bind(target);
-                  }
-                  return value;
-               },
-            });
+   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
+   e.stopImmediatePropagation();
+   e.preventDefault();
 
-            return listener.call(this, proxiedEvent);
-         };
-
-         originalAddEventListener.call(this, type, wrappedListener, options);
-      } else {
-         originalAddEventListener.call(this, type, listener, options);
-      }
+   const opts = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      clientX: mirroredClientX,
+      clientY: clientY,
+      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
+      button: e.button || 0,
+      buttons: e.buttons || 0,
+      pointerId: e.pointerId || 1,
+      isPrimary: true,
    };
 
-   console.log("✅ Video element patched!");
+   try {
+      playerEl.dispatchEvent(new PointerEvent(e.type, opts));
+   } catch {
+      playerEl.dispatchEvent(new MouseEvent(e.type, opts));
+   }
+}
+
+// Регистрация перехвата событий - ТОЧНАЯ КОПИЯ из HTML
+const setupEventCapture = () => {
+   const events = [
+      "pointerdown",
+      "pointerup",
+      "pointermove",
+      "pointercancel",
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "touchstart",
+      "touchmove",
+      "touchend",
+   ];
+
+   events.forEach((ev) =>
+      document.addEventListener(ev, captureHandler, {
+         capture: true,
+         passive: false,
+      })
+   );
+
+   console.log("✅ Event capture установлен");
+};
+
+const removeEventCapture = () => {
+   const events = [
+      "pointerdown",
+      "pointerup",
+      "pointermove",
+      "pointercancel",
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "touchstart",
+      "touchmove",
+      "touchend",
+   ];
+
+   events.forEach((ev) =>
+      document.removeEventListener(ev, captureHandler, { capture: true })
+   );
 };
 
 // Переключение зеркалирования
@@ -139,15 +174,12 @@ const connect = async () => {
       isConnecting.value = true;
       errorMessage.value = "";
 
-      // MutationObserver: ждем появления video элемента и патчим его ДО инициализации библиотеки
+      // MutationObserver: ждем появления video элемента
       const observer = new MutationObserver(() => {
          const v = videoContainer.value?.querySelector("video");
          if (v && v !== videoElement) {
             videoElement = v;
-            // Патчим video элемент ДО того как библиотека навесит свои handler'ы
-            patchVideoElement(v);
             updateMirrorTransform();
-            observer.disconnect();
          }
       });
       observer.observe(videoContainer.value, {
@@ -256,9 +288,13 @@ onMounted(() => {
    ) {
       mirrorEnabled.value = true;
    }
+
+   // Устанавливаем перехват событий
+   setupEventCapture();
 });
 
 onBeforeUnmount(() => {
+   removeEventCapture();
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
