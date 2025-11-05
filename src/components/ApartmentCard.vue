@@ -274,10 +274,6 @@ const handleOverlayClick = () => {
 
 // Переход в режим первого лица
 const handleFirstPersonView = () => {
-   console.log(
-      "🎯 Клик на кнопку First Person View, данные:",
-      props.apartmentData
-   );
    emit("apartments", props.apartmentData);
 };
 </script>
