@@ -57,90 +57,71 @@ const lastMessage = ref("");
 
 let pixelStreaming = null;
 
-// Функция для инвертирования координат мыши по оси X
-const invertMouseCoordinates = (event) => {
-   const target = event.target;
-   const rect = target.getBoundingClientRect();
-   const centerX = rect.width / 2;
-   const relativeX = event.clientX - rect.left;
-   const invertedX = rect.width - relativeX;
+// Патчим video элемент для инвертирования координат мыши
+const patchVideoElement = (video) => {
+   const originalAddEventListener = video.addEventListener.bind(video);
+   const mouseEvents = [
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "click",
+      "dblclick",
+      "contextmenu",
+      "wheel",
+      "pointerdown",
+      "pointerup",
+      "pointermove",
+   ];
 
-   return {
-      clientX: rect.left + invertedX,
-      clientY: event.clientY,
-   };
-};
+   // Переопределяем addEventListener для video элемента
+   video.addEventListener = function (type, listener, options) {
+      if (mouseEvents.includes(type)) {
+         // Оборачиваем оригинальный обработчик
+         const wrappedListener = function (event) {
+            // Инвертируем X-координату
+            const rect = video.getBoundingClientRect();
+            const relativeX = event.clientX - rect.left;
+            const invertedX = rect.width - relativeX;
+            const newClientX = rect.left + invertedX;
 
-// Перехват событий мыши для инвертирования координат
-const setupMouseInterception = () => {
-   const observer = new MutationObserver(() => {
-      const video = videoContainer.value?.querySelector("video");
-      if (video && !video.dataset.intercepted) {
-         video.dataset.intercepted = "true";
-
-         // Перехватываем все события мыши
-         const events = [
-            "mousedown",
-            "mouseup",
-            "mousemove",
-            "click",
-            "dblclick",
-         ];
-
-         events.forEach((eventType) => {
-            video.addEventListener(
-               eventType,
-               (e) => {
-                  // Пропускаем уже обработанные события
-                  if (e.inverted) {
-                     return;
+            // Создаем прокси для события с измененными координатами
+            const modifiedEvent = new Proxy(event, {
+               get(target, prop) {
+                  if (prop === "clientX") {
+                     return newClientX;
                   }
-
-                  // Останавливаем оригинальное событие
-                  e.preventDefault();
-                  e.stopImmediatePropagation();
-
-                  const inverted = invertMouseCoordinates(e);
-
-                  // Создаем новое событие с инвертированными координатами
-                  const newEvent = new MouseEvent(eventType, {
-                     bubbles: e.bubbles,
-                     cancelable: e.cancelable,
-                     view: e.view,
-                     detail: e.detail,
-                     screenX: e.screenX,
-                     screenY: e.screenY,
-                     clientX: inverted.clientX,
-                     clientY: inverted.clientY,
-                     ctrlKey: e.ctrlKey,
-                     altKey: e.altKey,
-                     shiftKey: e.shiftKey,
-                     metaKey: e.metaKey,
-                     button: e.button,
-                     buttons: e.buttons,
-                     relatedTarget: e.relatedTarget,
-                  });
-
-                  // Помечаем событие как обработанное
-                  newEvent.inverted = true;
-
-                  // Отправляем новое событие
-                  video.dispatchEvent(newEvent);
+                  if (prop === "offsetX") {
+                     return invertedX;
+                  }
+                  if (prop === "x") {
+                     return newClientX;
+                  }
+                  if (prop === "pageX") {
+                     return newClientX + window.scrollX;
+                  }
+                  // Для всех остальных свойств возвращаем оригинальное значение
+                  const value = target[prop];
+                  // Если это функция, привязываем контекст к оригинальному событию
+                  if (typeof value === "function") {
+                     return value.bind(target);
+                  }
+                  return value;
                },
-               true
-            ); // Используем capture фазу
-         });
+            });
 
-         observer.disconnect();
+            // Вызываем оригинальный обработчик с модифицированным событием
+            return listener.call(this, modifiedEvent);
+         };
+
+         // Добавляем обработчик с оберткой
+         originalAddEventListener(type, wrappedListener, options);
+      } else {
+         // Для не-мышиных событий используем оригинальный метод
+         originalAddEventListener(type, listener, options);
       }
-   });
+   };
 
-   if (videoContainer.value) {
-      observer.observe(videoContainer.value, {
-         childList: true,
-         subtree: true,
-      });
-   }
+   console.log("✅ Video element patched for coordinate inversion");
 };
 
 const connect = async () => {
@@ -152,6 +133,21 @@ const connect = async () => {
    try {
       isConnecting.value = true;
       errorMessage.value = "";
+
+      // Наблюдаем за созданием video элемента и патчим его ДО того, как библиотека навесит обработчики
+      const observer = new MutationObserver((mutations) => {
+         const video = videoContainer.value?.querySelector("video");
+         if (video && !video.dataset.patched) {
+            video.dataset.patched = "true";
+            patchVideoElement(video);
+            observer.disconnect();
+         }
+      });
+
+      observer.observe(videoContainer.value, {
+         childList: true,
+         subtree: true,
+      });
 
       const config = new Config({
          initialSettings: {
@@ -173,8 +169,6 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
-         // Настраиваем перехват координат мыши после подключения
-         setTimeout(() => setupMouseInterception(), 100);
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
