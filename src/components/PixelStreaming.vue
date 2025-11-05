@@ -1,23 +1,12 @@
 <template>
    <div class="pixel-streaming-container">
+      <!-- Кнопка переключения зеркалирования -->
+      <button v-if="isConnected" class="mirror-toggle" @click="toggleMirror">
+         Mirror: {{ mirrorEnabled ? "ON" : "OFF" }}
+      </button>
+
       <div class="video-wrapper">
-         <div
-            ref="videoContainer"
-            class="video-container"
-            @mousemove="handleMouseMove"
-            @click="handleClick"
-            @mousedown="handleMouseDown"
-            @mouseup="handleMouseUp"
-            @contextmenu="handleContextMenu"
-         >
-            <!-- Кастомный курсор (инвертированный) -->
-            <div
-               v-if="isConnected && showMirrorCursor"
-               ref="mirrorCursor"
-               class="mirror-cursor"
-               :style="{ left: cursorX + 'px', top: cursorY + 'px' }"
-            ></div>
-         </div>
+         <div ref="videoContainer" class="video-container"></div>
 
          <div v-if="!isConnected" class="overlay">
             <div class="connection-panel">
@@ -56,7 +45,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount } from "vue";
+import { ref, onBeforeUnmount, onMounted } from "vue";
 import {
    PixelStreaming,
    Config,
@@ -64,103 +53,126 @@ import {
 import ConnectedDisplay from "./ConnectedDisplay.vue";
 
 const videoContainer = ref(null);
-const mirrorCursor = ref(null);
 const signallingUrl = ref("ws://localhost:80");
 const isConnected = ref(false);
 const isConnecting = ref(false);
 const errorMessage = ref("");
 const receivedMessages = ref([]);
 const lastMessage = ref("");
-const showMirrorCursor = ref(false);
-const cursorX = ref(0);
-const cursorY = ref(0);
+const mirrorEnabled = ref(false);
 
 let pixelStreaming = null;
 let videoElement = null;
 
-// Обработка движения мыши - курсор следует за реальной позицией
-const handleMouseMove = (e) => {
-   if (!isConnected.value || !videoContainer.value) return;
-
-   const rect = videoContainer.value.getBoundingClientRect();
-
-   // Курсор точно на месте реального курсора пользователя
-   cursorX.value = e.clientX - rect.left;
-   cursorY.value = e.clientY - rect.top;
-
-   showMirrorCursor.value = true;
+// Переключение зеркалирования
+const toggleMirror = () => {
+   mirrorEnabled.value = !mirrorEnabled.value;
+   updateMirrorTransform();
 };
 
-// Генерируем клик в инвертированной позиции относительно центра
-const generateMirroredClick = (originalEvent, eventType = "click") => {
-   if (!videoElement) return;
-
-   const rect = videoContainer.value.getBoundingClientRect();
-   const centerX = rect.width / 2;
-
-   // Вычисляем смещение курсора от центра
-   const offsetX = cursorX.value - centerX;
-
-   // Инвертируем X-координату относительно центра
-   const mirroredX = centerX - offsetX;
-
-   // Абсолютные координаты для клика
-   const mirroredClientX = rect.left + mirroredX;
-   const mirroredClientY = rect.top + cursorY.value;
-
-   const eventOptions = {
-      bubbles: true,
-      cancelable: true,
-      view: window,
-      clientX: mirroredClientX,
-      clientY: mirroredClientY,
-      screenX: originalEvent.screenX,
-      screenY: originalEvent.screenY,
-      button: originalEvent.button,
-      buttons: originalEvent.buttons,
-      ctrlKey: originalEvent.ctrlKey,
-      altKey: originalEvent.altKey,
-      shiftKey: originalEvent.shiftKey,
-      metaKey: originalEvent.metaKey,
-   };
-
-   try {
-      const newEvent = new PointerEvent(eventType, eventOptions);
-      videoElement.dispatchEvent(newEvent);
-   } catch (err) {
-      const newEvent = new MouseEvent(eventType, eventOptions);
-      videoElement.dispatchEvent(newEvent);
+// Обновление transform для видео
+const updateMirrorTransform = () => {
+   if (videoElement) {
+      videoElement.style.transform = mirrorEnabled.value ? "scaleX(-1)" : "";
+      videoElement.style.transformOrigin = "center center";
    }
 };
 
-const handleClick = (e) => {
-   if (!isConnected.value) return;
+// Обработчик для перехвата и инвертирования координат
+function captureHandler(e) {
+   if (!mirrorEnabled.value || !videoContainer.value) return;
+
+   // Проверяем, что событие произошло внутри video контейнера
+   if (!videoContainer.value.contains(e.target)) return;
+
+   const rect = videoContainer.value.getBoundingClientRect();
+   if (rect.width === 0) return;
+
+   let clientX = e.clientX;
+   let clientY = e.clientY;
+
+   // Обработка touch событий
+   if (e.touches && e.touches.length > 0) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+   }
+
+   // Зеркальное преобразование координаты X
+   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
+
+   // Останавливаем оригинальное событие
+   e.stopImmediatePropagation();
    e.preventDefault();
-   e.stopPropagation();
-   generateMirroredClick(e, "click");
+
+   // Создаем опции для нового события
+   const opts = {
+      bubbles: true,
+      cancelable: true,
+      composed: true,
+      clientX: mirroredClientX,
+      clientY: clientY,
+      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
+      button: e.button || 0,
+      buttons: e.buttons || 0,
+      pointerId: e.pointerId || 1,
+      isPrimary: true,
+   };
+
+   // Пытаемся создать PointerEvent, если не получается - MouseEvent
+   try {
+      videoContainer.value.dispatchEvent(new PointerEvent(e.type, opts));
+   } catch (error) {
+      videoContainer.value.dispatchEvent(new MouseEvent(e.type, opts));
+   }
+}
+
+// Настройка перехвата событий
+const setupEventCapture = () => {
+   const events = [
+      "pointerdown",
+      "pointerup",
+      "pointermove",
+      "pointercancel",
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "touchstart",
+      "touchmove",
+      "touchend",
+   ];
+
+   events.forEach((eventType) => {
+      document.addEventListener(eventType, captureHandler, {
+         capture: true,
+         passive: false,
+      });
+   });
+
+   console.log("✅ Mirror event capture enabled");
 };
 
-const handleMouseDown = (e) => {
-   if (!isConnected.value) return;
-   e.preventDefault();
-   e.stopPropagation();
-   generateMirroredClick(e, "mousedown");
-   generateMirroredClick(e, "pointerdown");
-};
+// Удаление перехвата событий
+const removeEventCapture = () => {
+   const events = [
+      "pointerdown",
+      "pointerup",
+      "pointermove",
+      "pointercancel",
+      "mousedown",
+      "mouseup",
+      "mousemove",
+      "touchstart",
+      "touchmove",
+      "touchend",
+   ];
 
-const handleMouseUp = (e) => {
-   if (!isConnected.value) return;
-   e.preventDefault();
-   e.stopPropagation();
-   generateMirroredClick(e, "mouseup");
-   generateMirroredClick(e, "pointerup");
-};
+   events.forEach((eventType) => {
+      document.removeEventListener(eventType, captureHandler, {
+         capture: true,
+      });
+   });
 
-const handleContextMenu = (e) => {
-   if (!isConnected.value) return;
-   e.preventDefault();
-   e.stopPropagation();
-   generateMirroredClick(e, "contextmenu");
+   console.log("❌ Mirror event capture disabled");
 };
 
 const connect = async () => {
@@ -172,6 +184,19 @@ const connect = async () => {
    try {
       isConnecting.value = true;
       errorMessage.value = "";
+
+      // MutationObserver: ждем появления video элемента
+      const observer = new MutationObserver(() => {
+         const v = videoContainer.value?.querySelector("video");
+         if (v && v !== videoElement) {
+            videoElement = v;
+            updateMirrorTransform();
+         }
+      });
+      observer.observe(videoContainer.value, {
+         childList: true,
+         subtree: true,
+      });
 
       const config = new Config({
          initialSettings: {
@@ -193,18 +218,14 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
-
-         // Получаем ссылку на video элемент для генерации событий
-         setTimeout(() => {
-            videoElement = videoContainer.value?.querySelector("video");
-         }, 100);
+         // Настраиваем перехват событий
+         setupEventCapture();
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
          isConnected.value = false;
          isConnecting.value = false;
          videoElement = null;
-         showMirrorCursor.value = false;
       });
 
       pixelStreaming.addEventListener("playStreamError", () => {
@@ -269,7 +290,21 @@ const sendToEngine = (data) => {
    }
 };
 
+onMounted(() => {
+   // Можно добавить инициализацию из URL параметров
+   const params = new URLSearchParams(window.location.search);
+   const mirrorParam = params.get("mirror");
+   if (
+      mirrorParam === "1" ||
+      mirrorParam === "true" ||
+      mirrorParam === "flip"
+   ) {
+      mirrorEnabled.value = true;
+   }
+});
+
 onBeforeUnmount(() => {
+   removeEventCapture();
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
@@ -285,6 +320,27 @@ onBeforeUnmount(() => {
    align-items: center;
    justify-content: center;
    background: #1a1a1a;
+   position: relative;
+}
+
+.mirror-toggle {
+   position: fixed;
+   top: 10px;
+   right: 10px;
+   z-index: 9999;
+   padding: 8px 12px;
+   background: rgba(0, 0, 0, 0.6);
+   color: white;
+   border: none;
+   border-radius: 4px;
+   cursor: pointer;
+   font-size: 14px;
+   user-select: none;
+   transition: background 0.2s;
+}
+
+.mirror-toggle:hover {
+   background: rgba(0, 0, 0, 0.8);
 }
 
 .video-wrapper {
@@ -300,25 +356,6 @@ onBeforeUnmount(() => {
    width: 100%;
    height: 100%;
    position: relative;
-   cursor: none; /* Скрываем обычный курсор когда подключены */
-}
-
-.video-container :deep(video) {
-   transform: scaleX(-1);
-   pointer-events: none; /* Отключаем клики на самом видео */
-}
-
-.mirror-cursor {
-   position: absolute;
-   width: 20px;
-   height: 20px;
-   border: 2px solid rgba(255, 0, 0, 0.8);
-   border-radius: 50%;
-   background: rgba(255, 0, 0, 0.2);
-   pointer-events: none;
-   transform: translate(-50%, -50%);
-   z-index: 1000;
-   transition: left 0.05s ease-out, top 0.05s ease-out;
 }
 
 .overlay {
