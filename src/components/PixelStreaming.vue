@@ -5,7 +5,7 @@
          Mirror: {{ mirrorEnabled ? "ON" : "OFF" }}
       </button>
 
-      <div ref="videoWrapper" class="video-wrapper">
+      <div class="video-wrapper">
          <div ref="videoContainer" class="video-container"></div>
 
          <div v-if="!isConnected" class="overlay">
@@ -54,7 +54,6 @@ import {
 import ConnectedDisplay from "./ConnectedDisplay.vue";
 
 const videoContainer = ref(null);
-const videoWrapper = ref(null);
 const signallingUrl = ref("ws://localhost:80");
 const isConnected = ref(false);
 const isConnecting = ref(false);
@@ -65,9 +64,61 @@ const mirrorEnabled = ref(false);
 
 let pixelStreaming = null;
 let videoElement = null;
+let originalAddEventListener = null;
 
-// WeakSet для отслеживания уже обработанных событий (предотвращение рекурсии)
-const processedEvents = new WeakSet();
+// Патчим video элемент чтобы обернуть все handler'ы библиотеки
+const patchVideoElement = (video) => {
+   originalAddEventListener = video.addEventListener.bind(video);
+
+   video.addEventListener = function (type, listener, options) {
+      const mouseEvents = [
+         "pointerdown",
+         "pointerup",
+         "pointermove",
+         "mousedown",
+         "mouseup",
+         "mousemove",
+      ];
+
+      if (mouseEvents.includes(type) && typeof listener === "function") {
+         // Оборачиваем listener
+         const wrappedListener = function (e) {
+            if (!mirrorEnabled.value) {
+               // Если mirror выключен - просто вызываем оригинальный handler
+               return listener.call(this, e);
+            }
+
+            const rect = video.getBoundingClientRect();
+            const relativeX = e.clientX - rect.left;
+            const mirroredClientX = rect.left + rect.width - relativeX;
+
+            // Создаем прокси с инвертированными координатами
+            const proxiedEvent = new Proxy(e, {
+               get(target, prop) {
+                  if (prop === "clientX") return mirroredClientX;
+                  if (prop === "offsetX") return rect.width - relativeX;
+                  if (prop === "x") return mirroredClientX;
+                  if (prop === "pageX") return mirroredClientX + window.scrollX;
+
+                  const value = target[prop];
+                  if (typeof value === "function") {
+                     return value.bind(target);
+                  }
+                  return value;
+               },
+            });
+
+            return listener.call(this, proxiedEvent);
+         };
+
+         originalAddEventListener.call(this, type, wrappedListener, options);
+      } else {
+         originalAddEventListener.call(this, type, listener, options);
+      }
+   };
+
+   console.log("✅ Video element patched!");
+};
 
 // Переключение зеркалирования
 const toggleMirror = () => {
@@ -83,168 +134,6 @@ const updateMirrorTransform = () => {
    }
 };
 
-// Обработчик для перехвата и инвертирования координат
-function captureHandler(e) {
-   // Детальное логирование для отладки
-   if (e.type === "mousedown" || e.type === "pointerdown") {
-      console.log("=== КЛИК ===");
-      console.log("mirrorEnabled:", mirrorEnabled.value);
-      console.log("videoWrapper:", !!videoWrapper.value);
-      console.log("target:", e.target);
-      console.log("target.tagName:", e.target.tagName);
-      console.log("target.className:", e.target.className);
-   }
-
-   if (!mirrorEnabled.value || !videoWrapper.value) {
-      return;
-   }
-
-   // Пропускаем уже обработанные события - они должны пройти дальше без остановки
-   if (processedEvents.has(e)) {
-      if (e.type === "mousedown" || e.type === "pointerdown") {
-         console.log(
-            "♻️ Обработанное событие - пропускаем дальше к библиотеке"
-         );
-      }
-      return; // Просто выходим, не останавливая событие
-   }
-
-   // Пропускаем клики по кнопке Mirror
-   if (e.target.classList && e.target.classList.contains("mirror-toggle")) {
-      console.log("🔘 Клик по кнопке Mirror, пропускаем");
-      return;
-   }
-
-   // Проверяем, что событие произошло внутри video-wrapper
-   const isInside = videoWrapper.value.contains(e.target);
-
-   if (e.type === "mousedown" || e.type === "pointerdown") {
-      console.log("📍 Target внутри videoWrapper:", isInside);
-   }
-
-   if (!isInside) {
-      console.log("❌ Target НЕ внутри videoWrapper");
-      return;
-   }
-
-   const rect = videoWrapper.value.getBoundingClientRect();
-   if (rect.width === 0) return;
-
-   console.log(
-      "✅ ИНВЕРТИРУЕМ:",
-      e.type,
-      "X:",
-      e.clientX,
-      "→",
-      rect.left + rect.width - (e.clientX - rect.left)
-   );
-
-   let clientX = e.clientX;
-   let clientY = e.clientY;
-
-   // Обработка touch событий
-   if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-   }
-
-   // Зеркальное преобразование координаты X
-   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
-
-   // Останавливаем оригинальное событие
-   e.stopImmediatePropagation();
-   e.preventDefault();
-
-   // Создаем опции для нового события
-   const opts = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      clientX: mirroredClientX,
-      clientY: clientY,
-      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
-      button: e.button || 0,
-      buttons: e.buttons || 0,
-      pointerId: e.pointerId || 1,
-      isPrimary: true,
-   };
-
-   // Создаем новое событие
-   let newEvent;
-   try {
-      newEvent = new PointerEvent(e.type, opts);
-   } catch (error) {
-      newEvent = new MouseEvent(e.type, opts);
-   }
-
-   // Помечаем событие как обработанное ДО отправки
-   processedEvents.add(newEvent);
-
-   // Находим video элемент и отправляем событие на него
-   const video = videoContainer.value?.querySelector("video");
-   if (video) {
-      console.log("📤 Отправляем инвертированное событие на VIDEO элемент");
-      video.dispatchEvent(newEvent);
-   } else {
-      console.warn("⚠️ Video элемент не найден!");
-   }
-}
-
-// Настройка перехвата событий
-const setupEventCapture = () => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   console.log("🔧 Устанавливаем перехват событий на document...");
-
-   events.forEach((eventType) => {
-      document.addEventListener(eventType, captureHandler, {
-         capture: true,
-         passive: false,
-      });
-      console.log("   ➕ Добавлен перехват:", eventType);
-   });
-
-   console.log(
-      "✅ Mirror event capture enabled - всего событий:",
-      events.length
-   );
-};
-
-// Удаление перехвата событий
-const removeEventCapture = () => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   events.forEach((eventType) => {
-      document.removeEventListener(eventType, captureHandler, {
-         capture: true,
-      });
-   });
-
-   console.log("❌ Mirror event capture disabled");
-};
-
 const connect = async () => {
    if (!signallingUrl.value) {
       errorMessage.value = "Пожалуйста, введите URL сервера";
@@ -255,12 +144,15 @@ const connect = async () => {
       isConnecting.value = true;
       errorMessage.value = "";
 
-      // MutationObserver: ждем появления video элемента
+      // MutationObserver: ждем появления video элемента и патчим его ДО инициализации библиотеки
       const observer = new MutationObserver(() => {
          const v = videoContainer.value?.querySelector("video");
          if (v && v !== videoElement) {
             videoElement = v;
+            // Патчим video элемент ДО того как библиотека навесит свои handler'ы
+            patchVideoElement(v);
             updateMirrorTransform();
+            observer.disconnect();
          }
       });
       observer.observe(videoContainer.value, {
@@ -369,14 +261,9 @@ onMounted(() => {
    ) {
       mirrorEnabled.value = true;
    }
-
-   // Настраиваем перехват событий СРАЗУ при монтировании
-   // Это важно: обработчики должны быть установлены ДО того, как библиотека установит свои
-   setupEventCapture();
 });
 
 onBeforeUnmount(() => {
-   removeEventCapture();
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
