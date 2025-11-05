@@ -6,7 +6,7 @@
       </button>
 
       <div class="video-wrapper">
-         <div ref="videoContainer" class="video-container"></div>
+         <div id="player" ref="videoContainer" class="video-container"></div>
 
          <div v-if="!isConnected" class="overlay">
             <div class="connection-panel">
@@ -69,7 +69,7 @@ let videoElement = null;
 function captureHandler(e) {
    if (!mirrorEnabled.value) return;
 
-   const playerEl = videoContainer.value;
+   const playerEl = document.getElementById("player");
    if (!playerEl || !playerEl.contains(e.target)) return;
 
    const rect = playerEl.getBoundingClientRect();
