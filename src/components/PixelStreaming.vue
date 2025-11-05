@@ -1,12 +1,7 @@
 <template>
    <div class="pixel-streaming-container">
-      <!-- Кнопка переключения зеркалирования -->
-      <button v-if="isConnected" class="mirror-toggle" @click="toggleMirror">
-         Mirror: {{ mirrorEnabled ? "ON" : "OFF" }}
-      </button>
-
       <div class="video-wrapper">
-         <div id="player" ref="videoContainer" class="video-container"></div>
+         <div ref="videoContainer" class="video-container"></div>
 
          <div v-if="!isConnected" class="overlay">
             <div class="connection-panel">
@@ -32,21 +27,20 @@
                </div>
             </div>
          </div>
-      </div>
 
-      <!-- ConnectedDisplay вынесен за пределы video-wrapper -->
-      <ConnectedDisplay
-         v-if="isConnected"
-         :last-message="lastMessage"
-         :received-messages="receivedMessages"
-         @send-data="sendJsonData"
-         @send-to-engine="sendToEngine"
-      />
+         <ConnectedDisplay
+            v-if="isConnected"
+            :last-message="lastMessage"
+            :received-messages="receivedMessages"
+            @send-data="sendJsonData"
+            @send-to-engine="sendToEngine"
+         />
+      </div>
    </div>
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount, onMounted } from "vue";
+import { ref, onBeforeUnmount } from "vue";
 import {
    PixelStreaming,
    Config,
@@ -60,109 +54,8 @@ const isConnecting = ref(false);
 const errorMessage = ref("");
 const receivedMessages = ref([]);
 const lastMessage = ref("");
-const mirrorEnabled = ref(false);
 
 let pixelStreaming = null;
-let videoElement = null;
-
-// Перехват координат - ТОЧНАЯ КОПИЯ из HTML кода
-function captureHandler(e) {
-   if (!mirrorEnabled.value) return;
-
-   const playerEl = document.getElementById("player");
-   if (!playerEl || !playerEl.contains(e.target)) return;
-
-   const rect = playerEl.getBoundingClientRect();
-   if (rect.width === 0) return;
-
-   let clientX = e.clientX,
-      clientY = e.clientY;
-   if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-   }
-
-   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
-   e.stopImmediatePropagation();
-   e.preventDefault();
-
-   const opts = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      clientX: mirroredClientX,
-      clientY: clientY,
-      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
-      button: e.button || 0,
-      buttons: e.buttons || 0,
-      pointerId: e.pointerId || 1,
-      isPrimary: true,
-   };
-
-   try {
-      playerEl.dispatchEvent(new PointerEvent(e.type, opts));
-   } catch {
-      playerEl.dispatchEvent(new MouseEvent(e.type, opts));
-   }
-}
-
-// Регистрация перехвата событий - ТОЧНАЯ КОПИЯ из HTML
-const setupEventCapture = () => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   events.forEach((ev) =>
-      document.addEventListener(ev, captureHandler, {
-         capture: true,
-         passive: false,
-      })
-   );
-
-   console.log("✅ Event capture установлен");
-};
-
-const removeEventCapture = () => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "pointermove",
-      "pointercancel",
-      "mousedown",
-      "mouseup",
-      "mousemove",
-      "touchstart",
-      "touchmove",
-      "touchend",
-   ];
-
-   events.forEach((ev) =>
-      document.removeEventListener(ev, captureHandler, { capture: true })
-   );
-};
-
-// Переключение зеркалирования
-const toggleMirror = () => {
-   mirrorEnabled.value = !mirrorEnabled.value;
-   updateMirrorTransform();
-};
-
-// Обновление transform для видео
-const updateMirrorTransform = () => {
-   if (videoElement) {
-      videoElement.style.transform = mirrorEnabled.value ? "scaleX(-1)" : "";
-      videoElement.style.transformOrigin = "center center";
-   }
-};
 
 const connect = async () => {
    if (!signallingUrl.value) {
@@ -174,19 +67,6 @@ const connect = async () => {
       isConnecting.value = true;
       errorMessage.value = "";
 
-      // MutationObserver: ждем появления video элемента
-      const observer = new MutationObserver(() => {
-         const v = videoContainer.value?.querySelector("video");
-         if (v && v !== videoElement) {
-            videoElement = v;
-            updateMirrorTransform();
-         }
-      });
-      observer.observe(videoContainer.value, {
-         childList: true,
-         subtree: true,
-      });
-
       const config = new Config({
          initialSettings: {
             ss: signallingUrl.value,
@@ -196,7 +76,7 @@ const connect = async () => {
             StartVideoMuted: false,
             HoveringMouse: true,
             FakeMouseWithTouches: true,
-            LogLevel: "Error", // Отключаем информационные логи
+            LogLevel: "Error",
          },
       });
 
@@ -212,7 +92,6 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
          isConnected.value = false;
          isConnecting.value = false;
-         videoElement = null;
       });
 
       pixelStreaming.addEventListener("playStreamError", () => {
@@ -277,28 +156,10 @@ const sendToEngine = (data) => {
    }
 };
 
-onMounted(() => {
-   // Инициализация из URL параметров
-   const params = new URLSearchParams(window.location.search);
-   const mirrorParam = params.get("mirror");
-   if (
-      mirrorParam === "1" ||
-      mirrorParam === "true" ||
-      mirrorParam === "flip"
-   ) {
-      mirrorEnabled.value = true;
-   }
-
-   // Устанавливаем перехват событий
-   setupEventCapture();
-});
-
 onBeforeUnmount(() => {
-   removeEventCapture();
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
-   videoElement = null;
 });
 </script>
 
@@ -310,27 +171,6 @@ onBeforeUnmount(() => {
    align-items: center;
    justify-content: center;
    background: #1a1a1a;
-   position: relative;
-}
-
-.mirror-toggle {
-   position: fixed;
-   top: 10px;
-   right: 10px;
-   z-index: 9999;
-   padding: 8px 12px;
-   background: rgba(0, 0, 0, 0.6);
-   color: white;
-   border: none;
-   border-radius: 4px;
-   cursor: pointer;
-   font-size: 14px;
-   user-select: none;
-   transition: background 0.2s;
-}
-
-.mirror-toggle:hover {
-   background: rgba(0, 0, 0, 0.8);
 }
 
 .video-wrapper {
