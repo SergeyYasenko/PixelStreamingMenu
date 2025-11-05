@@ -75,56 +75,51 @@ function captureHandler(e) {
    const rect = videoElement.getBoundingClientRect();
    if (rect.width === 0) return;
 
-   let clientX = e.clientX,
-      clientY = e.clientY;
-
-   // Обработка touch событий
-   if (e.touches && e.touches.length > 0) {
-      clientX = e.touches[0].clientX;
-      clientY = e.touches[0].clientY;
-   }
-
-   // Зеркальное преобразование координаты X
-   const mirroredClientX = rect.left + rect.width - (clientX - rect.left);
-
-   // Останавливаем оригинальное событие
-   e.stopImmediatePropagation();
-   e.preventDefault();
-
-   // Создаем опции для нового события
-   const opts = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      clientX: mirroredClientX,
-      clientY: clientY,
-      screenX: e.screenX,
-      screenY: e.screenY,
-      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
-      button: e.button || 0,
-      buttons: e.buttons || 0,
-      pointerId: e.pointerId || 1,
-      isPrimary: e.isPrimary !== undefined ? e.isPrimary : true,
-      ctrlKey: e.ctrlKey,
-      altKey: e.altKey,
-      shiftKey: e.shiftKey,
-      metaKey: e.metaKey,
-   };
-
-   // Создаем новое событие
-   let newEvent;
-   try {
-      newEvent = new PointerEvent(e.type, opts);
-   } catch (error) {
-      newEvent = new MouseEvent(e.type, opts);
-   }
-
    // Помечаем событие как обработанное
-   processedEvents.add(newEvent);
+   processedEvents.add(e);
 
-   // Отправляем событие
-   videoElement.dispatchEvent(newEvent);
+   // Вычисляем зеркальные координаты
+   const originalClientX = e.clientX;
+   const relativeX = originalClientX - rect.left;
+   const mirroredClientX = rect.left + rect.width - relativeX;
+   const mirroredOffsetX = rect.width - relativeX;
+
+   // Переопределяем геттеры координат в событии
+   try {
+      Object.defineProperty(e, "clientX", {
+         get: function () {
+            return mirroredClientX;
+         },
+         configurable: true,
+      });
+      Object.defineProperty(e, "offsetX", {
+         get: function () {
+            return mirroredOffsetX;
+         },
+         configurable: true,
+      });
+      Object.defineProperty(e, "x", {
+         get: function () {
+            return mirroredClientX;
+         },
+         configurable: true,
+      });
+      Object.defineProperty(e, "pageX", {
+         get: function () {
+            return mirroredClientX + window.scrollX;
+         },
+         configurable: true,
+      });
+      Object.defineProperty(e, "layerX", {
+         get: function () {
+            return mirroredOffsetX;
+         },
+         configurable: true,
+      });
+   } catch (err) {
+      // Если не можем модифицировать свойства, пропускаем
+      console.warn("Cannot modify event properties:", err);
+   }
 }
 
 // Настройка перехвата событий
