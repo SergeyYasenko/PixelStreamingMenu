@@ -59,7 +59,7 @@ const emit = defineEmits(["close", "qualitySelected", "sendToEngine"]);
 
 const settings = ref({
    invertYaw: true,
-   invertPitch: false,
+   invertPitch: true,
 });
 
 const handleClose = () => {
