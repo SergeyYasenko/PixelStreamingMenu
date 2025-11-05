@@ -81,13 +81,8 @@ const patchVideoElement = (video) => {
       ];
 
       if (mouseEvents.includes(type) && typeof listener === "function") {
-         // Оборачиваем listener
+         // Оборачиваем listener - ВСЕГДА инвертируем координаты
          const wrappedListener = function (e) {
-            if (!mirrorEnabled.value) {
-               // Если mirror выключен - просто вызываем оригинальный handler
-               return listener.call(this, e);
-            }
-
             const rect = video.getBoundingClientRect();
             const relativeX = e.clientX - rect.left;
             const mirroredClientX = rect.left + rect.width - relativeX;
