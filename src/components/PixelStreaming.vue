@@ -275,9 +275,9 @@ onBeforeUnmount(() => {
    position: relative;
 }
 
-.video-container :deep(video) {
+/* .video-container :deep(video) {
    transform: scaleX(-1);
-}
+} */
 
 .overlay {
    position: absolute;
