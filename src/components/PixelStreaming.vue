@@ -57,115 +57,73 @@ const lastMessage = ref("");
 
 let pixelStreaming = null;
 let videoElement = null;
-let mirrorEnabled = false;
+let originalGetBoundingClientRect = null;
 
-// Используем WeakSet для отслеживания уже обработанных событий
-const processedEvents = new WeakSet();
+// Патчим video элемент для инвертирования координат
+const patchVideoElement = (video) => {
+   // Сохраняем оригинальный метод
+   originalGetBoundingClientRect = video.getBoundingClientRect.bind(video);
 
-// Обработчик для перехвата и инвертирования координат
-function captureHandler(e) {
-   if (!mirrorEnabled || !videoElement) return;
-
-   // Пропускаем уже обработанные события (избегаем рекурсии)
-   if (processedEvents.has(e)) return;
-
-   // Проверяем, что событие произошло внутри video элемента
-   if (!videoElement.contains(e.target)) return;
-
-   const rect = videoElement.getBoundingClientRect();
-   if (rect.width === 0) return;
-
-   // Помечаем событие как обработанное
-   processedEvents.add(e);
-
-   // Вычисляем зеркальные координаты
-   const originalClientX = e.clientX;
-   const relativeX = originalClientX - rect.left;
-   const mirroredClientX = rect.left + rect.width - relativeX;
-   const mirroredOffsetX = rect.width - relativeX;
-
-   // Переопределяем геттеры координат в событии
-   try {
-      Object.defineProperty(e, "clientX", {
-         get: function () {
-            return mirroredClientX;
+   // Переопределяем getBoundingClientRect
+   video.getBoundingClientRect = function () {
+      const rect = originalGetBoundingClientRect();
+      // Возвращаем прокси с инвертированными координатами
+      return new Proxy(rect, {
+         get(target, prop) {
+            // Возвращаем оригинальные значения для всех свойств
+            return target[prop];
          },
-         configurable: true,
       });
-      Object.defineProperty(e, "offsetX", {
-         get: function () {
-            return mirroredOffsetX;
-         },
-         configurable: true,
-      });
-      Object.defineProperty(e, "x", {
-         get: function () {
-            return mirroredClientX;
-         },
-         configurable: true,
-      });
-      Object.defineProperty(e, "pageX", {
-         get: function () {
-            return mirroredClientX + window.scrollX;
-         },
-         configurable: true,
-      });
-      Object.defineProperty(e, "layerX", {
-         get: function () {
-            return mirroredOffsetX;
-         },
-         configurable: true,
-      });
-   } catch (err) {
-      // Если не можем модифицировать свойства, пропускаем
-      console.warn("Cannot modify event properties:", err);
-   }
-}
+   };
 
-// Настройка перехвата событий
-const setupEventCapture = () => {
-   // Перехватываем только события клика, не движение курсора
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "mousedown",
-      "mouseup",
-      "click",
-      "dblclick",
-      "contextmenu",
-   ];
+   // Патчим обработчики событий мыши на самом video элементе
+   const originalAddEventListener = video.addEventListener.bind(video);
+   video.addEventListener = function (type, listener, options) {
+      const mouseEvents = [
+         "pointerdown",
+         "pointerup",
+         "mousedown",
+         "mouseup",
+         "click",
+         "dblclick",
+         "contextmenu",
+      ];
 
-   events.forEach((eventType) => {
-      document.addEventListener(eventType, captureHandler, {
-         capture: true,
-         passive: false,
-      });
-   });
+      if (mouseEvents.includes(type) && typeof listener === "function") {
+         // Оборачиваем listener для инвертирования координат
+         const wrappedListener = function (e) {
+            const rect = originalGetBoundingClientRect();
+            const relativeX = e.clientX - rect.left;
+            const mirroredClientX = rect.left + rect.width - relativeX;
+            const mirroredOffsetX = rect.width - relativeX;
 
-   mirrorEnabled = true;
-   console.log("✅ Mouse coordinate mirroring enabled (clicks only)");
-};
+            // Создаем прокси для события
+            const eventProxy = new Proxy(e, {
+               get(target, prop) {
+                  if (prop === "clientX") return mirroredClientX;
+                  if (prop === "offsetX") return mirroredOffsetX;
+                  if (prop === "x") return mirroredClientX;
+                  if (prop === "pageX") return mirroredClientX + window.scrollX;
+                  if (prop === "layerX") return mirroredOffsetX;
 
-// Удаление перехвата событий
-const removeEventCapture = () => {
-   const events = [
-      "pointerdown",
-      "pointerup",
-      "mousedown",
-      "mouseup",
-      "click",
-      "dblclick",
-      "contextmenu",
-   ];
+                  const value = target[prop];
+                  if (typeof value === "function") {
+                     return value.bind(target);
+                  }
+                  return value;
+               },
+            });
 
-   events.forEach((eventType) => {
-      document.removeEventListener(eventType, captureHandler, {
-         capture: true,
-      });
-   });
+            return listener.call(this, eventProxy);
+         };
 
-   mirrorEnabled = false;
-   console.log("❌ Mouse coordinate mirroring disabled");
+         originalAddEventListener.call(this, type, wrappedListener, options);
+      } else {
+         originalAddEventListener.call(this, type, listener, options);
+      }
+   };
+
+   console.log("✅ Video element patched for coordinate mirroring");
 };
 
 const connect = async () => {
@@ -177,6 +135,22 @@ const connect = async () => {
    try {
       isConnecting.value = true;
       errorMessage.value = "";
+
+      // Наблюдаем за созданием video элемента и патчим его ДО инициализации библиотеки
+      const observer = new MutationObserver(() => {
+         const video = videoContainer.value?.querySelector("video");
+         if (video && !video.dataset.patched) {
+            video.dataset.patched = "true";
+            videoElement = video;
+            patchVideoElement(video);
+            observer.disconnect();
+         }
+      });
+
+      observer.observe(videoContainer.value, {
+         childList: true,
+         subtree: true,
+      });
 
       const config = new Config({
          initialSettings: {
@@ -198,20 +172,11 @@ const connect = async () => {
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
-
-         // Получаем ссылку на video элемент и включаем перехват координат
-         setTimeout(() => {
-            videoElement = videoContainer.value?.querySelector("video");
-            if (videoElement) {
-               setupEventCapture();
-            }
-         }, 100);
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
          isConnected.value = false;
          isConnecting.value = false;
-         removeEventCapture();
          videoElement = null;
       });
 
@@ -278,10 +243,10 @@ const sendToEngine = (data) => {
 };
 
 onBeforeUnmount(() => {
-   removeEventCapture();
    if (pixelStreaming) {
       pixelStreaming.disconnect();
    }
+   videoElement = null;
 });
 </script>
 
