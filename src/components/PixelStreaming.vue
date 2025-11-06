@@ -189,10 +189,7 @@ const connect = async () => {
             AutoPlayVideo: true,
             AutoConnect: true,
             ss_autoconnect: true,
-            StartVideoMuted: false,
-            HoveringMouse: true,
             FakeMouseWithTouches: true,
-            LogLevel: "Error", // Отключаем информационные логи
          },
       });
 
@@ -315,7 +312,7 @@ onBeforeUnmount(() => {
    position: relative;
 }
 
-.video-container :deep(video) {
+.video-container {
    transform: scaleX(-1);
 }
 
