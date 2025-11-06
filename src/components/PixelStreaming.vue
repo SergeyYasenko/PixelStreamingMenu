@@ -48,7 +48,7 @@ import {
 import ConnectedDisplay from "./ConnectedDisplay.vue";
 
 const videoContainer = ref(null);
-const signallingUrl = ref("ws://localhost:80");
+const signallingUrl = ref("ws://192.168.0.110:80");
 const isConnected = ref(false);
 const isConnecting = ref(false);
 const errorMessage = ref("");
@@ -129,15 +129,20 @@ function captureHandler(e) {
 
 // Настройка перехвата событий
 const setupEventCapture = () => {
-   // Перехватываем только события клика, не движение курсора
+   // Перехватываем события клика, движения мыши И touch для мобильных
    const events = [
       "pointerdown",
       "pointerup",
+      "pointermove",
       "mousedown",
       "mouseup",
+      "mousemove",
       "click",
       "dblclick",
       "contextmenu",
+      "touchstart",
+      "touchend",
+      "touchmove",
    ];
 
    events.forEach((eventType) => {
@@ -148,7 +153,9 @@ const setupEventCapture = () => {
    });
 
    mirrorEnabled = true;
-   console.log("✅ Mouse coordinate mirroring enabled (clicks only)");
+   console.log(
+      "✅ Mouse coordinate mirroring enabled (mouse + touch + drag and drop)"
+   );
 };
 
 // Удаление перехвата событий
@@ -156,11 +163,16 @@ const removeEventCapture = () => {
    const events = [
       "pointerdown",
       "pointerup",
+      "pointermove",
       "mousedown",
       "mouseup",
+      "mousemove",
       "click",
       "dblclick",
       "contextmenu",
+      "touchstart",
+      "touchend",
+      "touchmove",
    ];
 
    events.forEach((eventType) => {
@@ -310,10 +322,16 @@ onBeforeUnmount(() => {
    width: 100%;
    height: 100%;
    position: relative;
+   touch-action: manipulation; /* Убирает задержку 300мс на мобильных устройствах */
+   -webkit-tap-highlight-color: transparent; /* Убирает выделение при тапе на iOS */
+   user-select: none; /* Запрещает выделение текста */
+   -webkit-user-select: none;
 }
 
-.video-container {
+.video-container :deep(video) {
    transform: scaleX(-1);
+   touch-action: manipulation; /* Убирает задержку 300мс на мобильных устройствах */
+   -webkit-tap-highlight-color: transparent; /* Убирает выделение при тапе на iOS */
 }
 
 .overlay {
