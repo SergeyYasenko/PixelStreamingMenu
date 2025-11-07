@@ -69,6 +69,21 @@ function captureHandler(e) {
    // Пропускаем уже обработанные события (избегаем рекурсии)
    if (processedEvents.has(e)) return;
 
+   // ВАЖНО: НЕ перехватываем touch события!
+   // Touch события должны идти напрямую к Pixel Streaming для правильной работы жестов (2 пальца и т.д.)
+   if (e.type.startsWith("touch")) {
+      console.log(`👆 Touch событие пропущено (идет напрямую в PS): ${e.type}`);
+      return;
+   }
+
+   // Также пропускаем pointer события с pointerType: "touch"
+   if (e.type.startsWith("pointer") && e.pointerType === "touch") {
+      console.log(
+         `👆 Pointer-touch событие пропущено (идет напрямую в PS): ${e.type}`
+      );
+      return;
+   }
+
    // Проверяем, что событие произошло внутри videoContainer
    // (это может быть video или overlay элементы от Pixel Streaming)
    const target = e.target;
@@ -88,13 +103,13 @@ function captureHandler(e) {
       return;
    }
 
-   // DEBUG: Логируем перехваченные события
+   // DEBUG: Логируем перехваченные события (только mouse/pointer)
    console.log(`🎯 Перехвачено событие: ${e.type}`, {
       target: `${e.target.tagName}${
          e.target.className ? "." + e.target.className : ""
       }`,
-      clientX: e.clientX || (e.touches && e.touches[0]?.clientX),
-      clientY: e.clientY || (e.touches && e.touches[0]?.clientY),
+      clientX: e.clientX,
+      clientY: e.clientY,
    });
 
    const rect = videoElement.getBoundingClientRect();
@@ -243,7 +258,7 @@ const setupEventCapture = () => {
 
    mirrorEnabled = true;
    console.log(
-      "✅ Mouse coordinate mirroring enabled (mouse + touch + drag and drop)"
+      "✅ Mouse/Pointer coordinate mirroring enabled (touch события идут напрямую в PS)"
    );
 };
 
@@ -289,11 +304,11 @@ const connect = async () => {
             ss: signallingUrl.value,
             AutoPlayVideo: true,
             AutoConnect: true,
-            FakeMouseWithTouches: true,
+            FakeMouseWithTouches: false, // ОТКЛЮЧАЕМ! Touch должны быть touch, а не mouse
             Gamepad: false,
             Keyboard: false,
             Mouse: true,
-            Touch: true,
+            Touch: true, // Touch события идут как touch
             XRController: false,
             HoveringMouse: false,
          },
