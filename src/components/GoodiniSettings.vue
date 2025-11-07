@@ -53,14 +53,44 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 
 const emit = defineEmits(["close", "qualitySelected", "sendToEngine"]);
 
-const settings = ref({
-   invertYaw: true,
-   invertPitch: false,
-});
+// Загружаем сохраненные настройки из localStorage
+const loadSettings = () => {
+   try {
+      const saved = localStorage.getItem("goodiniSettings");
+      if (saved) {
+         return JSON.parse(saved);
+      }
+   } catch (e) {
+      console.error("Failed to load settings:", e);
+   }
+   return {
+      invertYaw: true,
+      invertPitch: true,
+   };
+};
+
+const settings = ref(loadSettings());
+
+// Сохраняем настройки в localStorage
+const saveSettings = () => {
+   try {
+      localStorage.setItem("goodiniSettings", JSON.stringify(settings.value));
+   } catch (e) {
+      console.error("Failed to save settings:", e);
+   }
+};
+
+// Отправляем оба состояния чекбоксов на UE
+const sendBothInvertSettings = () => {
+   emit("sendToEngine", {
+      invertyaw: settings.value.invertYaw ? "1" : "0",
+      invertpitch: settings.value.invertPitch ? "1" : "0",
+   });
+};
 
 const handleClose = () => {
    emit("close");
@@ -78,20 +108,27 @@ const handleQualityClick = (quality) => {
    }
 };
 
-// Watch for checkbox changes
+// При изменении любого чекбокса отправляем оба состояния и сохраняем
 watch(
    () => settings.value.invertYaw,
-   (newValue) => {
-      emit("sendToEngine", { invertyaw: newValue ? "1" : "0" });
+   () => {
+      saveSettings();
+      sendBothInvertSettings();
    }
 );
 
 watch(
    () => settings.value.invertPitch,
-   (newValue) => {
-      emit("sendToEngine", { invertpitch: newValue ? "1" : "0" });
+   () => {
+      saveSettings();
+      sendBothInvertSettings();
    }
 );
+
+// При монтировании компонента отправляем текущие настройки на UE
+onMounted(() => {
+   sendBothInvertSettings();
+});
 </script>
 
 <style scoped>
