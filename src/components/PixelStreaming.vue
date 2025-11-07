@@ -202,6 +202,12 @@ const connect = async () => {
             AutoConnect: true,
             ss_autoconnect: true,
             FakeMouseWithTouches: true,
+            GamepadInput: false,
+            KeyboardInput: false,
+            MouseInput: true,
+            TouchInput: true,
+            XRControllerInput: false,
+            HoveringMouseInput: false,
          },
       });
 
