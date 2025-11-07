@@ -64,23 +64,35 @@ const processedEvents = new WeakSet();
 
 // Обработчик для перехвата и инвертирования координат
 function captureHandler(e) {
-   if (!mirrorEnabled || !videoElement) return;
+   if (!mirrorEnabled || !videoElement || !videoContainer.value) return;
 
    // Пропускаем уже обработанные события (избегаем рекурсии)
    if (processedEvents.has(e)) return;
 
-   // Проверяем, что событие произошло на video элементе
-   // ConnectedDisplay находится вне videoContainer, поэтому его события не попадут сюда
+   // Проверяем, что событие произошло внутри videoContainer
+   // (это может быть video или overlay элементы от Pixel Streaming)
    const target = e.target;
 
-   // Если клик НЕ на video элементе - пропускаем
-   if (target !== videoElement) {
+   // Если событие НЕ внутри videoContainer - пропускаем (это UI элементы)
+   if (!videoContainer.value.contains(target)) {
+      return;
+   }
+
+   // Проверяем, не является ли target элементом с pointer-events: auto
+   // (это наши UI элементы поверх видео)
+   const computedStyle = window.getComputedStyle(target);
+   if (computedStyle.pointerEvents === "auto" && target !== videoElement) {
+      console.log(
+         `⏭️ Пропускаем UI элемент: ${target.tagName}.${target.className}`
+      );
       return;
    }
 
    // DEBUG: Логируем перехваченные события
    console.log(`🎯 Перехвачено событие: ${e.type}`, {
-      target: e.target.tagName,
+      target: `${e.target.tagName}${
+         e.target.className ? "." + e.target.className : ""
+      }`,
       clientX: e.clientX || (e.touches && e.touches[0]?.clientX),
       clientY: e.clientY || (e.touches && e.touches[0]?.clientY),
    });
@@ -112,7 +124,7 @@ function captureHandler(e) {
       const touch = e.touches[0];
       const mirroredTouch = new Touch({
          identifier: touch.identifier,
-         target: videoElement,
+         target: target, // Используем оригинальный target
          clientX: mirroredClientX,
          clientY: clientY,
          screenX: touch.screenX,
@@ -139,7 +151,9 @@ function captureHandler(e) {
          metaKey: e.metaKey,
       });
 
-      console.log(`✨ Создано зеркальное TouchEvent: ${e.type}`);
+      console.log(
+         `✨ Создано зеркальное TouchEvent: ${e.type}, координаты: ${mirroredClientX}, ${clientY}`
+      );
    }
    // Для pointer событий
    else if (e.type.startsWith("pointer")) {
@@ -163,7 +177,9 @@ function captureHandler(e) {
          metaKey: e.metaKey,
       };
       newEvent = new PointerEvent(e.type, opts);
-      console.log(`✨ Создано зеркальное PointerEvent: ${e.type}`);
+      console.log(
+         `✨ Создано зеркальное PointerEvent: ${e.type}, координаты: ${mirroredClientX}, ${clientY}`
+      );
    }
    // Для остальных событий (mouse, click и т.д.)
    else {
@@ -184,14 +200,18 @@ function captureHandler(e) {
          metaKey: e.metaKey,
       };
       newEvent = new MouseEvent(e.type, opts);
-      console.log(`✨ Создано зеркальное MouseEvent: ${e.type}`);
+      console.log(
+         `✨ Создано зеркальное MouseEvent: ${e.type}, координаты: ${mirroredClientX}, ${clientY}`
+      );
    }
 
    // Помечаем событие как обработанное
    processedEvents.add(newEvent);
 
-   // Отправляем событие
-   videoElement.dispatchEvent(newEvent);
+   // Отправляем событие на тот же элемент, на который пришло оригинальное
+   target.dispatchEvent(newEvent);
+
+   console.log(`📤 Событие отправлено на: ${target.tagName}`);
 }
 
 // Настройка перехвата событий
@@ -291,6 +311,19 @@ const connect = async () => {
          setTimeout(() => {
             videoElement = videoContainer.value?.querySelector("video");
             if (videoElement) {
+               console.log(
+                  "📦 Структура videoContainer:",
+                  videoContainer.value
+               );
+               console.log("🎥 Video элемент:", videoElement);
+               console.log(
+                  "👶 Дочерние элементы videoContainer:",
+                  Array.from(videoContainer.value.children).map((el) => ({
+                     tag: el.tagName,
+                     class: el.className,
+                     id: el.id,
+                  }))
+               );
                setupEventCapture();
             }
          }, 100);
