@@ -69,8 +69,21 @@ function captureHandler(e) {
    // Пропускаем уже обработанные события (избегаем рекурсии)
    if (processedEvents.has(e)) return;
 
-   // Проверяем, что событие произошло внутри video элемента
-   if (!videoElement.contains(e.target)) return;
+   // Проверяем, что событие произошло на video элементе
+   // ConnectedDisplay находится вне videoContainer, поэтому его события не попадут сюда
+   const target = e.target;
+
+   // Если клик НЕ на video элементе - пропускаем
+   if (target !== videoElement) {
+      return;
+   }
+
+   // DEBUG: Логируем перехваченные события
+   console.log(`🎯 Перехвачено событие: ${e.type}`, {
+      target: e.target.tagName,
+      clientX: e.clientX || (e.touches && e.touches[0]?.clientX),
+      clientY: e.clientY || (e.touches && e.touches[0]?.clientY),
+   });
 
    const rect = videoElement.getBoundingClientRect();
    if (rect.width === 0) return;
@@ -91,33 +104,87 @@ function captureHandler(e) {
    e.stopImmediatePropagation();
    e.preventDefault();
 
-   // Создаем опции для нового события
-   const opts = {
-      bubbles: true,
-      cancelable: true,
-      composed: true,
-      view: window,
-      clientX: mirroredClientX,
-      clientY: clientY,
-      screenX: e.screenX,
-      screenY: e.screenY,
-      pointerType: e.pointerType || (e.touches ? "touch" : "mouse"),
-      button: e.button || 0,
-      buttons: e.buttons || 0,
-      pointerId: e.pointerId || 1,
-      isPrimary: e.isPrimary !== undefined ? e.isPrimary : true,
-      ctrlKey: e.ctrlKey,
-      altKey: e.altKey,
-      shiftKey: e.shiftKey,
-      metaKey: e.metaKey,
-   };
-
-   // Создаем новое событие
    let newEvent;
-   try {
+
+   // Для touch событий создаем TouchEvent
+   if (e.type.startsWith("touch") && e.touches) {
+      // Создаем зеркальный touch
+      const touch = e.touches[0];
+      const mirroredTouch = new Touch({
+         identifier: touch.identifier,
+         target: videoElement,
+         clientX: mirroredClientX,
+         clientY: clientY,
+         screenX: touch.screenX,
+         screenY: touch.screenY,
+         pageX: mirroredClientX,
+         pageY: clientY,
+         radiusX: touch.radiusX || 0,
+         radiusY: touch.radiusY || 0,
+         rotationAngle: touch.rotationAngle || 0,
+         force: touch.force || 1.0,
+      });
+
+      newEvent = new TouchEvent(e.type, {
+         bubbles: true,
+         cancelable: true,
+         composed: true,
+         view: window,
+         touches: [mirroredTouch],
+         targetTouches: [mirroredTouch],
+         changedTouches: [mirroredTouch],
+         ctrlKey: e.ctrlKey,
+         altKey: e.altKey,
+         shiftKey: e.shiftKey,
+         metaKey: e.metaKey,
+      });
+
+      console.log(`✨ Создано зеркальное TouchEvent: ${e.type}`);
+   }
+   // Для pointer событий
+   else if (e.type.startsWith("pointer")) {
+      const opts = {
+         bubbles: true,
+         cancelable: true,
+         composed: true,
+         view: window,
+         clientX: mirroredClientX,
+         clientY: clientY,
+         screenX: e.screenX,
+         screenY: e.screenY,
+         pointerType: e.pointerType || "mouse",
+         button: e.button || 0,
+         buttons: e.buttons || 0,
+         pointerId: e.pointerId || 1,
+         isPrimary: e.isPrimary !== undefined ? e.isPrimary : true,
+         ctrlKey: e.ctrlKey,
+         altKey: e.altKey,
+         shiftKey: e.shiftKey,
+         metaKey: e.metaKey,
+      };
       newEvent = new PointerEvent(e.type, opts);
-   } catch (error) {
+      console.log(`✨ Создано зеркальное PointerEvent: ${e.type}`);
+   }
+   // Для остальных событий (mouse, click и т.д.)
+   else {
+      const opts = {
+         bubbles: true,
+         cancelable: true,
+         composed: true,
+         view: window,
+         clientX: mirroredClientX,
+         clientY: clientY,
+         screenX: e.screenX,
+         screenY: e.screenY,
+         button: e.button || 0,
+         buttons: e.buttons || 0,
+         ctrlKey: e.ctrlKey,
+         altKey: e.altKey,
+         shiftKey: e.shiftKey,
+         metaKey: e.metaKey,
+      };
       newEvent = new MouseEvent(e.type, opts);
+      console.log(`✨ Создано зеркальное MouseEvent: ${e.type}`);
    }
 
    // Помечаем событие как обработанное
@@ -145,6 +212,8 @@ const setupEventCapture = () => {
       "touchmove",
    ];
 
+   // Слушаем на document с capture: true для перехвата ВСЕХ событий
+   // Внутри captureHandler проверяем, что это событие для видео, а не UI элементов
    events.forEach((eventType) => {
       document.addEventListener(eventType, captureHandler, {
          capture: true,
@@ -327,7 +396,7 @@ onBeforeUnmount(() => {
    width: 100%;
    height: 100%;
    position: relative;
-   touch-action: manipulation; /* Убирает задержку 300мс на мобильных устройствах */
+   touch-action: none; /* Отключаем все встроенные жесты браузера для передачи событий в JS */
    -webkit-tap-highlight-color: transparent; /* Убирает выделение при тапе на iOS */
    user-select: none; /* Запрещает выделение текста */
    -webkit-user-select: none;
@@ -335,7 +404,7 @@ onBeforeUnmount(() => {
 
 .video-container :deep(video) {
    transform: scaleX(-1);
-   touch-action: manipulation; /* Убирает задержку 300мс на мобильных устройствах */
+   touch-action: none; /* Отключаем все встроенные жесты браузера для передачи событий в JS */
    -webkit-tap-highlight-color: transparent; /* Убирает выделение при тапе на iOS */
 }
 
