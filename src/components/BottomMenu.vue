@@ -4,7 +4,10 @@
       <div class="bottom-menu-content">
          <div
             class="bottom-menu-item"
-            :class="{ disabled: item.disabled }"
+            :class="{
+               disabled: item.disabled,
+               active: item.name === 'Holo mode' && isHoloModeActive,
+            }"
             v-for="item in menuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
@@ -44,7 +47,10 @@
       <div class="bottom-menu-content-mobile">
          <div
             class="bottom-menu-item"
-            :class="{ disabled: item.disabled }"
+            :class="{
+               disabled: item.disabled,
+               active: item.name === 'Holo mode' && isHoloModeActive,
+            }"
             v-for="item in mobileMenuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
@@ -104,12 +110,14 @@ const emit = defineEmits([
    "qualitySelected",
    "sendToEngine",
    "showApartments",
+   "toggleHoloMode", // Переключение Holo mode с проверкой инфраструктуры
 ]);
 
 const showSettings = ref(false);
+const isHoloModeActive = ref(false); // Состояние Holo mode
 
-// Данные для нижнего меню
-const menuItems = ref([
+// Данные для нижнего меню - используем computed для динамического disabled
+const menuItems = computed(() => [
    {
       id: 1,
       name: "Home",
@@ -140,7 +148,7 @@ const menuItems = ref([
       id: 6,
       name: "Инфраструктура",
       icon: "src/assets/icons/bottomMenu/infrastructure.png",
-      disabled: true, // Временно отключена, может понадобиться в будущем
+      disabled: !isHoloModeActive.value, // Активна только в Holo mode
    },
    {
       id: 7,
@@ -204,7 +212,16 @@ const handleItemClick = (item) => {
    } else if (item.name === "Next mode") {
       emit("sendToEngine", { nextmode: "" });
    } else if (item.name === "Holo mode") {
-      emit("sendToEngine", { holomode: "" });
+      // Toggle Holo mode - активирует/деактивирует кнопку Инфраструктура
+      const wasActive = isHoloModeActive.value;
+      isHoloModeActive.value = !isHoloModeActive.value;
+
+      // Передаем информацию о переключении в ConnectedDisplay
+      // Он сам решит что отправлять: только holomode или holomode + home
+      emit("toggleHoloMode", {
+         wasActive,
+         isNowActive: isHoloModeActive.value,
+      });
    }
 };
 

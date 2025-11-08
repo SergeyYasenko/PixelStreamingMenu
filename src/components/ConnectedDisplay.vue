@@ -36,6 +36,7 @@
             @qualitySelected="handleQualitySelected"
             @sendToEngine="handleSendToEngine"
             @showApartments="showApartmentsSelector"
+            @toggleHoloMode="handleToggleHoloMode"
          />
          <ApartmentSelector
             v-show="showApartmentSelector"
@@ -283,6 +284,29 @@ const hideDataBlocksSelector = () => {
    showDataBlocks.value = false;
    // Очищаем данные при закрытии
    externalDataBlocks.value = [];
+};
+
+// Обработка переключения Holo mode
+const handleToggleHoloMode = ({ wasActive, isNowActive }) => {
+   // Проверяем, выключается ли Holo mode И открыто ли окно инфраструктуры
+   const infrastructureIsOpen =
+      showDataBlocks.value && dataBlocksType.value === "infrastructure";
+
+   if (wasActive && !isNowActive) {
+      // Holo mode выключается
+      if (infrastructureIsOpen) {
+         // Инфраструктура открыта - закрываем и отправляем home + holomode
+         hideDataBlocksSelector();
+         emit("sendToEngine", { home: "" });
+         emit("sendToEngine", { holomode: "" });
+      } else {
+         // Инфраструктура не открыта - отправляем только holomode
+         emit("sendToEngine", { holomode: "" });
+      }
+   } else {
+      // Holo mode включается - отправляем только holomode
+      emit("sendToEngine", { holomode: "" });
+   }
 };
 
 const showGoodiniSettingsSelector = () => {

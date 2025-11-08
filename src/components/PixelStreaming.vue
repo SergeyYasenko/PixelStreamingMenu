@@ -538,13 +538,9 @@ onBeforeUnmount(() => {
    border-radius: 4px;
    text-align: center;
 }
-</style>
-
 
 .video-container :deep(video) {
-
    transform: scaleX(-1);
-
 
    /* Оптимизации для планшетов */
    will-change: transform;
@@ -562,10 +558,7 @@ onBeforeUnmount(() => {
    -moz-osx-font-smoothing: grayscale;
 }
 
-
-
 .overlay {
-
    position: absolute;
 
    top: 0;
@@ -585,13 +578,9 @@ onBeforeUnmount(() => {
    background: rgba(0, 0, 0, 0.8);
 
    z-index: 10;
-
 }
 
-
-
 .connection-panel {
-
    background: #2a2a2a;
 
    padding: 2rem;
@@ -601,33 +590,21 @@ onBeforeUnmount(() => {
    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
 
    min-width: 400px;
-
 }
 
-
-
 .connection-panel h2 {
-
    margin: 0 0 1.5rem 0;
 
    color: #fff;
 
    text-align: center;
-
 }
-
-
 
 .input-group {
-
    margin-bottom: 1.5rem;
-
 }
 
-
-
 .input-group label {
-
    display: block;
 
    color: #ccc;
@@ -635,13 +612,9 @@ onBeforeUnmount(() => {
    margin-bottom: 0.5rem;
 
    font-size: 0.9rem;
-
 }
 
-
-
 .input-group input {
-
    width: 100%;
 
    padding: 0.75rem;
@@ -657,23 +630,15 @@ onBeforeUnmount(() => {
    font-size: 1rem;
 
    box-sizing: border-box;
-
 }
 
-
-
 .input-group input:focus {
-
    outline: none;
 
    border-color: #646cff;
-
 }
 
-
-
 .connect-btn {
-
    width: 100%;
 
    padding: 0.75rem;
@@ -693,31 +658,19 @@ onBeforeUnmount(() => {
    transition: background 0.3s;
 
    user-select: none;
-
 }
-
-
 
 .connect-btn:hover:not(:disabled) {
-
    background: #535bf2;
-
 }
 
-
-
 .connect-btn:disabled {
-
    background: #444;
 
    cursor: not-allowed;
-
 }
 
-
-
 .error-message {
-
    margin-top: 1rem;
 
    padding: 0.75rem;
@@ -729,9 +682,5 @@ onBeforeUnmount(() => {
    border-radius: 4px;
 
    text-align: center;
-
 }
-
 </style>
-
-
