@@ -346,6 +346,7 @@ const handleFirstPersonView = (data) => {
    width: 100%;
    height: 100%;
    pointer-events: none;
+   z-index: 10; /* КРИТИЧНО: UI должен быть поверх video (z-index: 0) */
 }
 
 .hous-wrapper {
@@ -368,5 +369,7 @@ const handleFirstPersonView = (data) => {
    bottom: 0;
    left: 0;
    width: 100%;
+   pointer-events: auto; /* КРИТИЧНО: Разрешить взаимодействие с меню */
+   z-index: 15; /* Выше чем connected-display */
 }
 </style>

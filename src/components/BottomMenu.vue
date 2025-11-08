@@ -4,6 +4,7 @@
       <div class="bottom-menu-content">
          <div
             class="bottom-menu-item"
+            :class="{ disabled: item.disabled }"
             v-for="item in menuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
@@ -43,6 +44,7 @@
       <div class="bottom-menu-content-mobile">
          <div
             class="bottom-menu-item"
+            :class="{ disabled: item.disabled }"
             v-for="item in mobileMenuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
@@ -138,6 +140,7 @@ const menuItems = ref([
       id: 6,
       name: "Инфраструктура",
       icon: "src/assets/icons/bottomMenu/infrastructure.png",
+      disabled: true, // Временно отключена, может понадобиться в будущем
    },
    {
       id: 7,
@@ -173,6 +176,11 @@ const mobileMenuItems = computed(() => {
 });
 
 const handleItemClick = (item) => {
+   // Игнорируем клики на неактивных кнопках
+   if (item.disabled) {
+      return;
+   }
+
    if (item.name === "Home") {
       emit("sendToEngine", { home: "" });
    } else if (item.name === "Скрыть") {
@@ -266,6 +274,26 @@ const handleGoodiniSendToEngine = (data) => {
 .bottom-menu-item:hover {
    background-color: rgba(255, 255, 255, 0.3);
    transform: translateY(-2px);
+}
+
+/* Стили для неактивных кнопок */
+.bottom-menu-item.disabled {
+   opacity: 0.4;
+   cursor: not-allowed;
+   pointer-events: none;
+}
+
+.bottom-menu-item.disabled:hover {
+   background-color: transparent;
+   transform: none;
+}
+
+.bottom-menu-item.disabled .bottom-menu-icon {
+   opacity: 0.5;
+}
+
+.bottom-menu-item.disabled .bottom-menu-text {
+   opacity: 0.5;
 }
 
 .bottom-menu-icon {

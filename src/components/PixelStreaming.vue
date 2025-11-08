@@ -167,7 +167,7 @@ const connect = async () => {
             // НАСТРОЙКИ ВИДЕО И АУДИО
             // ============================================
             StartVideoMuted: false, // Запускать видео без звука (default: false)
-            HoveringMouse: true, // Отображать курсор мыши при наведении (default: true)
+            HoveringMouse: false, // Отображать курсор мыши при наведении (default: true)
             FakeMouseWithTouches: true, // Эмулировать мышь через тач-события (default: true)
 
             // Использование аудио/микрофона
@@ -183,9 +183,9 @@ const connect = async () => {
             // ============================================
             // НАСТРОЙКИ ВИДЕО КОДЕКА
             // ============================================
-            PreferH264: true, // Предпочитать H.264 (лучшая совместимость) (default: false)
-            ForceH264: true, // Принудительно использовать H.264 (default: false)
-            PreferVP8: false, // Предпочитать VP8 (лучше для некоторых браузеров) (default: false)
+            PreferH264: false, // Предпочитать H.264 (лучшая совместимость) (default: false)
+            ForceH264: false, // Принудительно использовать H.264 (default: false)
+            PreferVP8: true, // Предпочитать VP8 (лучше для некоторых браузеров) (default: false)
             PreferVP9: false, // Предпочитать VP9 (более эффективный, но меньше поддержка) (default: false)
 
             // ============================================
@@ -204,7 +204,7 @@ const connect = async () => {
             // Настройки битрейта для WebRTC
             WebRTCMinBitrate: 500000, // WebRTC минимум 500kbps (default: не задан)
             WebRTCMaxBitrate: 8000000, // WebRTC максимум 8Mbps (default: не задан)
-            WebRTCFPS: 30, // Максимальный FPS 30 для стабильности (default: 60)
+            WebRTCFPS: 24, // Максимальный FPS 30 для стабильности (default: 60)
 
             // ============================================
             // НАСТРОЙКИ КАЧЕСТВА ВИДЕО
@@ -212,7 +212,7 @@ const connect = async () => {
             VideoScalingFactor: 1.0, // Масштаб видео (1.0 = 100%, 0.75 = 75%) (default: 1.0)
 
             // Настройки кодирования
-            KeyframeInterval: 1000, // Интервал ключевых кадров в мс (default: 2000)
+            KeyframeInterval: 500, // Интервал ключевых кадров в мс (default: 2000)
             // Меньше значение = чаще I-frames = стабильнее картинка, но больше трафик
 
             // ============================================
@@ -433,26 +433,28 @@ onBeforeUnmount(() => {
 .video-container {
    width: 100%;
    height: 100%;
-   position: relative;
+   position: absolute;
+   top: 0;
+   left: 0;
+   z-index: 0; /* КРИТИЧНО: Video должен быть под UI элементами */
+
+   /* Изоляция слоя для планшетов - предотвращает блокировку рендеринга overlay */
+   isolation: isolate;
 }
 
 .video-container :deep(video) {
+   /* Базовый transform без избыточных оптимизаций */
    transform: scaleX(-1);
 
-   /* Оптимизации для планшетов */
-   will-change: transform;
-   backface-visibility: hidden;
-   -webkit-backface-visibility: hidden;
-   transform-style: preserve-3d;
-   -webkit-transform-style: preserve-3d;
+   /* Явные размеры для планшетов */
+   width: 100%;
+   height: 100%;
+   object-fit: contain;
+   display: block; /* Важно для правильного рендеринга */
 
-   /* Принудительное использование аппаратного ускорения */
-   -webkit-transform: translateZ(0) scaleX(-1);
-   -moz-transform: translateZ(0) scaleX(-1);
-
-   /* Предотвращение мерцания на планшетах */
-   -webkit-font-smoothing: antialiased;
-   -moz-osx-font-smoothing: grayscale;
+   /* КРИТИЧНО для планшетов: явное указание что это video layer */
+   position: relative;
+   z-index: 1;
 }
 
 .overlay {
@@ -540,3 +542,199 @@ onBeforeUnmount(() => {
    text-align: center;
 }
 </style>
+
+
+.video-container :deep(video) {
+
+   transform: scaleX(-1);
+
+
+   /* Оптимизации для планшетов */
+   will-change: transform;
+   backface-visibility: hidden;
+   -webkit-backface-visibility: hidden;
+   transform-style: preserve-3d;
+   -webkit-transform-style: preserve-3d;
+
+   /* Принудительное использование аппаратного ускорения */
+   -webkit-transform: translateZ(0) scaleX(-1);
+   -moz-transform: translateZ(0) scaleX(-1);
+
+   /* Предотвращение мерцания на планшетах */
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
+}
+
+
+
+.overlay {
+
+   position: absolute;
+
+   top: 0;
+
+   left: 0;
+
+   width: 100%;
+
+   height: 100%;
+
+   display: flex;
+
+   align-items: center;
+
+   justify-content: center;
+
+   background: rgba(0, 0, 0, 0.8);
+
+   z-index: 10;
+
+}
+
+
+
+.connection-panel {
+
+   background: #2a2a2a;
+
+   padding: 2rem;
+
+   border-radius: 8px;
+
+   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+
+   min-width: 400px;
+
+}
+
+
+
+.connection-panel h2 {
+
+   margin: 0 0 1.5rem 0;
+
+   color: #fff;
+
+   text-align: center;
+
+}
+
+
+
+.input-group {
+
+   margin-bottom: 1.5rem;
+
+}
+
+
+
+.input-group label {
+
+   display: block;
+
+   color: #ccc;
+
+   margin-bottom: 0.5rem;
+
+   font-size: 0.9rem;
+
+}
+
+
+
+.input-group input {
+
+   width: 100%;
+
+   padding: 0.75rem;
+
+   border: 1px solid #444;
+
+   border-radius: 4px;
+
+   background: #1a1a1a;
+
+   color: #fff;
+
+   font-size: 1rem;
+
+   box-sizing: border-box;
+
+}
+
+
+
+.input-group input:focus {
+
+   outline: none;
+
+   border-color: #646cff;
+
+}
+
+
+
+.connect-btn {
+
+   width: 100%;
+
+   padding: 0.75rem;
+
+   background: #646cff;
+
+   color: white;
+
+   border: none;
+
+   border-radius: 4px;
+
+   font-size: 1rem;
+
+   cursor: pointer;
+
+   transition: background 0.3s;
+
+   user-select: none;
+
+}
+
+
+
+.connect-btn:hover:not(:disabled) {
+
+   background: #535bf2;
+
+}
+
+
+
+.connect-btn:disabled {
+
+   background: #444;
+
+   cursor: not-allowed;
+
+}
+
+
+
+.error-message {
+
+   margin-top: 1rem;
+
+   padding: 0.75rem;
+
+   background: #ff4444;
+
+   color: white;
+
+   border-radius: 4px;
+
+   text-align: center;
+
+}
+
+</style>
+
+
