@@ -143,53 +143,6 @@ const setupMouseInterception = () => {
    }
 };
 
-// Оптимизация для планшетов - принудительное обновление видео
-const setupTabletOptimizations = () => {
-   const video = videoContainer.value?.querySelector("video");
-   if (!video) return;
-
-   // Принудительное обновление видео элемента для планшетов
-   const forceVideoUpdate = () => {
-      if (video.paused) {
-         video.play().catch(() => {});
-      }
-
-      // Проверка и восстановление рендеринга
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-         console.warn("⚠️ Видео не рендерится, попытка восстановления...");
-         video.style.display = "none";
-         setTimeout(() => {
-            video.style.display = "block";
-         }, 50);
-      }
-   };
-
-   // Мониторинг каждые 2 секунды
-   const monitorInterval = setInterval(() => {
-      if (!isConnected.value) {
-         clearInterval(monitorInterval);
-         return;
-      }
-      forceVideoUpdate();
-   }, 2000);
-
-   // Обработка изменения видимости вкладки (важно для планшетов)
-   document.addEventListener("visibilitychange", () => {
-      if (!document.hidden && isConnected.value) {
-         setTimeout(() => forceVideoUpdate(), 100);
-      }
-   });
-
-   // Обработка изменения ориентации планшета
-   window.addEventListener("orientationchange", () => {
-      if (isConnected.value) {
-         setTimeout(() => forceVideoUpdate(), 300);
-      }
-   });
-
-   console.log("✅ Оптимизации для планшетов активированы");
-};
-
 const connect = async () => {
    if (!signallingUrl.value) {
       errorMessage.value = "Пожалуйста, введите URL сервера";
@@ -368,9 +321,6 @@ const connect = async () => {
          isConnecting.value = false;
          // Настраиваем перехват координат мыши после подключения
          setTimeout(() => setupMouseInterception(), 100);
-
-         // Дополнительная оптимизация для планшетов
-         setupTabletOptimizations();
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {

@@ -183,10 +183,8 @@ chrome://webrtc-internals    // Статистика WebRTC
 
 ### Консольные логи
 ```javascript
-// В setupTabletOptimizations()
-console.warn("⚠️ Видео не рендерится...")
-console.warn("⚠️ Планшет не получает кадры...")
-console.log("✅ Оптимизации для планшетов активированы")
+// Мониторинг WebRTC статистики
+console.warn("⚠️ Планшет не получает кадры:", videoStats)
 ```
 
 ---
@@ -208,7 +206,7 @@ console.log("✅ Оптимизации для планшетов активир
 
 **Файл:** `src/components/PixelStreaming.vue`
 
-**Строки:** 203-336 (Config initialSettings)
+**Строки:** 156-289 (Config initialSettings)
 
 **Формат:**
 ```javascript
