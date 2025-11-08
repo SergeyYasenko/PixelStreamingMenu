@@ -156,10 +156,10 @@ const selectedRooms = ref([]);
 const selectedAvailability = ref([]);
 
 const corps = ref([
-   { id: 1, name: "1", floorsCount: 22 },
-   { id: 2, name: "2", floorsCount: 16 },
-   { id: 3, name: "3", floorsCount: 16 },
-   { id: 4, name: "4", floorsCount: 22 },
+   { id: 1, name: "The Royal Yacht", floorsCount: 22 },
+   { id: 2, name: "meydan", floorsCount: 16 },
+   { id: 3, name: "ramada", floorsCount: 16 },
+   { id: 4, name: "Dubai Marina", floorsCount: 22 },
 ]);
 
 const floors = computed(() => {

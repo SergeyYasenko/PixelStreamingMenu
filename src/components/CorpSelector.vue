@@ -17,7 +17,11 @@
          >
             <div
                class="house-body-top-num"
-               :class="{ selected: selectedCorp === corp.id }"
+               :class="{
+                  selected: selectedCorp === corp.id,
+                  'house-body-top-num-digit': isNumericCorp(corp.name),
+                  'house-body-top-num-name': !isNumericCorp(corp.name),
+               }"
                v-for="corp in row"
                :key="corp.id"
                @click="$emit('selectCorp', corp.id)"
@@ -32,6 +36,15 @@
 <script setup>
 import { computed } from "vue";
 
+// Конфигурация названий корпусов (для проектов с именованными корпусами)
+const namedCorpsConfig = {
+   "The Royal Yacht": { name: "The Royal Yacht", id: 1 },
+   meydan: { name: "meydan", id: 2 },
+   ramada: { name: "ramada", id: 3 },
+   "Dubai Marina": { name: "Dubai Marina", id: 4 },
+   // Добавляйте или изменяйте названия здесь
+};
+
 const props = defineProps({
    corps: {
       type: Array,
@@ -44,6 +57,11 @@ const props = defineProps({
 });
 
 defineEmits(["selectCorp"]);
+
+// Проверка, является ли значение числом
+const isNumericCorp = (corpName) => {
+   return !isNaN(corpName) && !isNaN(parseFloat(corpName));
+};
 
 // Вычисляемое свойство для разбиения корпусов на строки по 4 элемента
 const corpRows = computed(() => {
@@ -109,6 +127,7 @@ const corpRows = computed(() => {
 .house-body-top-num-row {
    width: 100%;
    display: flex;
+   flex-direction: column;
    justify-content: space-between;
    border-bottom: 1px solid #fff;
 }
@@ -118,14 +137,27 @@ const corpRows = computed(() => {
 }
 
 .house-body-top-num {
-   font-size: 1.25rem;
    cursor: pointer;
-   flex: 1;
+   flex: 1 1 auto;
    border: 1px solid transparent;
    transition: all 0.3s ease;
    border-radius: 4px;
-   text-align: center;
    user-select: none;
+}
+
+/* Стили для цифровых корпусов */
+.house-body-top-num-digit {
+   font-size: 1.5rem;
+   text-align: center;
+   padding: 2px 0;
+   font-weight: 500;
+}
+
+/* Стили для именованных корпусов */
+.house-body-top-num-name {
+   font-size: 1.25rem;
+   padding: 0 15px;
+   text-align: left;
 }
 
 .house-body-top-num:hover {

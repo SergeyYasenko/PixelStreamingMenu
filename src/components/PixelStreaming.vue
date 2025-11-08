@@ -143,6 +143,53 @@ const setupMouseInterception = () => {
    }
 };
 
+// Оптимизация для планшетов - принудительное обновление видео
+const setupTabletOptimizations = () => {
+   const video = videoContainer.value?.querySelector("video");
+   if (!video) return;
+
+   // Принудительное обновление видео элемента для планшетов
+   const forceVideoUpdate = () => {
+      if (video.paused) {
+         video.play().catch(() => {});
+      }
+
+      // Проверка и восстановление рендеринга
+      if (video.videoWidth === 0 || video.videoHeight === 0) {
+         console.warn("⚠️ Видео не рендерится, попытка восстановления...");
+         video.style.display = "none";
+         setTimeout(() => {
+            video.style.display = "block";
+         }, 50);
+      }
+   };
+
+   // Мониторинг каждые 2 секунды
+   const monitorInterval = setInterval(() => {
+      if (!isConnected.value) {
+         clearInterval(monitorInterval);
+         return;
+      }
+      forceVideoUpdate();
+   }, 2000);
+
+   // Обработка изменения видимости вкладки (важно для планшетов)
+   document.addEventListener("visibilitychange", () => {
+      if (!document.hidden && isConnected.value) {
+         setTimeout(() => forceVideoUpdate(), 100);
+      }
+   });
+
+   // Обработка изменения ориентации планшета
+   window.addEventListener("orientationchange", () => {
+      if (isConnected.value) {
+         setTimeout(() => forceVideoUpdate(), 300);
+      }
+   });
+
+   console.log("✅ Оптимизации для планшетов активированы");
+};
+
 const connect = async () => {
    if (!signallingUrl.value) {
       errorMessage.value = "Пожалуйста, введите URL сервера";
@@ -155,14 +202,136 @@ const connect = async () => {
 
       const config = new Config({
          initialSettings: {
-            ss: signallingUrl.value,
-            AutoPlayVideo: true,
-            AutoConnect: true,
-            ss_autoconnect: true,
-            StartVideoMuted: false,
-            HoveringMouse: true,
-            FakeMouseWithTouches: true,
-            LogLevel: "Error", // Отключаем информационные логи
+            // ============================================
+            // ОСНОВНЫЕ НАСТРОЙКИ ПОДКЛЮЧЕНИЯ
+            // ============================================
+            ss: signallingUrl.value, // URL сигнального сервера (WebSocket)
+            AutoPlayVideo: true, // Автоматически воспроизводить видео при подключении (default: false)
+            AutoConnect: true, // Автоматически подключаться при загрузке (default: false)
+            ss_autoconnect: true, // Альтернативный флаг автоподключения (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ ВИДЕО И АУДИО
+            // ============================================
+            StartVideoMuted: false, // Запускать видео без звука (default: false)
+            HoveringMouse: true, // Отображать курсор мыши при наведении (default: true)
+            FakeMouseWithTouches: true, // Эмулировать мышь через тач-события (default: true)
+
+            // Использование аудио/микрофона
+            UseMic: false, // Использовать микрофон (default: false)
+            UseAudio: false, // Использовать аудио из стрима (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ ЛОГИРОВАНИЯ
+            // ============================================
+            // Уровни: "Verbose", "Info", "Warning", "Error", "None"
+            LogLevel: "Error", // Минимальное логирование для production (default: "Info")
+
+            // ============================================
+            // НАСТРОЙКИ ВИДЕО КОДЕКА
+            // ============================================
+            PreferH264: true, // Предпочитать H.264 (лучшая совместимость) (default: false)
+            ForceH264: true, // Принудительно использовать H.264 (default: false)
+            PreferVP8: false, // Предпочитать VP8 (лучше для некоторых браузеров) (default: false)
+            PreferVP9: false, // Предпочитать VP9 (более эффективный, но меньше поддержка) (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ СЕТИ (TURN/STUN)
+            // ============================================
+            ForceTURN: false, // Принудительно использовать TURN сервер (default: false)
+            ForceMONO: false, // Принудительно использовать моно аудио (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ БИТРЕЙТА (в битах в секунду)
+            // ============================================
+            MinBitrate: 500000, // Минимальный битрейт 500kbps (default: 100000)
+            MaxBitrate: 8000000, // Максимальный битрейт 8Mbps (default: 20000000)
+            LowBitrateTimeoutMs: 10000, // Таймаут низкого битрейта 10 сек (default: 10000)
+
+            // Настройки битрейта для WebRTC
+            WebRTCMinBitrate: 500000, // WebRTC минимум 500kbps (default: не задан)
+            WebRTCMaxBitrate: 8000000, // WebRTC максимум 8Mbps (default: не задан)
+            WebRTCFPS: 30, // Максимальный FPS 30 для стабильности (default: 60)
+
+            // ============================================
+            // НАСТРОЙКИ КАЧЕСТВА ВИДЕО
+            // ============================================
+            VideoScalingFactor: 1.0, // Масштаб видео (1.0 = 100%, 0.75 = 75%) (default: 1.0)
+
+            // Настройки кодирования
+            KeyframeInterval: 1000, // Интервал ключевых кадров в мс (default: 2000)
+            // Меньше значение = чаще I-frames = стабильнее картинка, но больше трафик
+
+            // ============================================
+            // НАСТРОЙКИ УПРАВЛЕНИЯ МЫШЬЮ
+            // ============================================
+            SuppressBrowserKeys: true, // Блокировать браузерные горячие клавиши (default: true)
+            IsQualityController: false, // Управление качеством на клиенте (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ РАЗРЕШЕНИЯ И VIEWPORT
+            // ============================================
+            MatchViewportResolution: true, // Подстраивать под разрешение viewport (default: false)
+            // Критично для планшетов с разными разрешениями
+
+            // ============================================
+            // НАСТРОЙКИ АВТОПОДКЛЮЧЕНИЯ СТРИМЕРА
+            // ============================================
+            StreamerAutoJoin: true, // Автоматически подключаться к стримеру (default: false)
+
+            // ============================================
+            // НАСТРОЙКИ XR (VR/AR)
+            // ============================================
+            XRControllerInput: false, // Включить поддержку XR контроллеров (default: false)
+
+            // ============================================
+            // ЭКСПЕРИМЕНТАЛЬНЫЕ НАСТРОЙКИ
+            // ============================================
+            TimeoutIfIdle: false, // Таймаут при бездействии (default: false)
+            MaxReconnectAttempts: 3, // Максимум попыток переподключения (default: 3)
+
+            // Настройки задержки
+            MaxLatency: 200, // Максимальная задержка в мс (default: не задан)
+            MinLatency: 0, // Минимальная задержка в мс (default: 0)
+
+            // ============================================
+            // НАСТРОЙКИ ДЛЯ TOUCH УСТРОЙСТВ
+            // ============================================
+            TouchScreenInput: true, // Включить поддержку тач-скрина (default: true)
+            GamepadInput: false, // Включить поддержку геймпада (default: true)
+
+            // ============================================
+            // ДОПОЛНИТЕЛЬНЫЕ НАСТРОЙКИ
+            // ============================================
+            AFKTimeout: 0, // Таймаут AFK в секундах (0 = выключен) (default: 0)
+            WaitForStreamer: true, // Ждать подключения стримера (default: true)
+
+            // Статистика и мониторинг
+            PrintStats: false, // Выводить статистику в консоль (default: false)
+            ShowTextOverlays: false, // Показывать текстовые оверлеи (default: false)
+
+            // ============================================
+            // ПРИМЕЧАНИЯ ПО ОПТИМИЗАЦИИ
+            // ============================================
+            // Для телефонов:
+            //   - MinBitrate: 300000, MaxBitrate: 5000000
+            //   - VideoScalingFactor: 0.75, WebRTCFPS: 30
+            //   - KeyframeInterval: 1500
+
+            // Для планшетов (текущие):
+            //   - MinBitrate: 500000, MaxBitrate: 8000000
+            //   - VideoScalingFactor: 1.0, WebRTCFPS: 30
+            //   - KeyframeInterval: 1000
+
+            // Для десктопов:
+            //   - MinBitrate: 1000000, MaxBitrate: 20000000
+            //   - VideoScalingFactor: 1.0, WebRTCFPS: 60
+            //   - KeyframeInterval: 2000
+
+            // При проблемах с картинкой:
+            //   - Уменьшите KeyframeInterval до 500
+            //   - Попробуйте PreferVP8: true вместо H264
+            //   - Снизьте WebRTCFPS до 24
          },
       });
 
@@ -170,11 +339,38 @@ const connect = async () => {
          videoElementParent: videoContainer.value,
       });
 
+      // Прямая настройка WebRTC для планшетов (расширенная конфигурация)
+      if (
+         pixelStreaming.config &&
+         pixelStreaming.config.setOptionSettingValue
+      ) {
+         // Настройка параметров кодировщика для стабильной передачи
+         try {
+            // Принудительная отправка ключевых кадров
+            pixelStreaming.config.setOptionSettingValue(
+               "WebRTC",
+               "DegradationPreference",
+               "maintain-framerate"
+            );
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxFPS", 30);
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MinQP", 20);
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxQP", 51);
+         } catch (e) {
+            console.warn(
+               "Не удалось применить расширенные настройки WebRTC:",
+               e
+            );
+         }
+      }
+
       pixelStreaming.addEventListener("webRtcConnected", () => {
          isConnected.value = true;
          isConnecting.value = false;
          // Настраиваем перехват координат мыши после подключения
          setTimeout(() => setupMouseInterception(), 100);
+
+         // Дополнительная оптимизация для планшетов
+         setupTabletOptimizations();
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
@@ -218,6 +414,20 @@ const connect = async () => {
 
          if (receivedMessages.value.length > 10) {
             receivedMessages.value.pop();
+         }
+      });
+
+      // Мониторинг статистики WebRTC для диагностики
+      pixelStreaming.addEventListener("statsReceived", (stats) => {
+         // Логирование статистики для отладки на планшетах
+         if (stats && stats.inboundVideoStats) {
+            const videoStats = stats.inboundVideoStats;
+            if (
+               videoStats.framesReceived === 0 ||
+               videoStats.framesDecoded === 0
+            ) {
+               console.warn("⚠️ Планшет не получает кадры:", videoStats);
+            }
          }
       });
 
@@ -278,6 +488,21 @@ onBeforeUnmount(() => {
 
 .video-container :deep(video) {
    transform: scaleX(-1);
+
+   /* Оптимизации для планшетов */
+   will-change: transform;
+   backface-visibility: hidden;
+   -webkit-backface-visibility: hidden;
+   transform-style: preserve-3d;
+   -webkit-transform-style: preserve-3d;
+
+   /* Принудительное использование аппаратного ускорения */
+   -webkit-transform: translateZ(0) scaleX(-1);
+   -moz-transform: translateZ(0) scaleX(-1);
+
+   /* Предотвращение мерцания на планшетах */
+   -webkit-font-smoothing: antialiased;
+   -moz-osx-font-smoothing: grayscale;
 }
 
 .overlay {
