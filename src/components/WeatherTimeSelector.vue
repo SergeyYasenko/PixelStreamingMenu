@@ -336,7 +336,7 @@ const weatherOptions = [
    },
    {
       name: "FOGGY",
-      image: "/src/assets/icons/weather/Fog.png",
+      image: "/src/assets/icons/weather/Foggy.png",
    },
    {
       name: "RAIN LIGHT",
@@ -618,8 +618,22 @@ onMounted(() => {
    pointer-events: auto;
    border: 1px solid rgba(255, 255, 255, 0.2);
    margin-bottom: 5px;
+
    @media (max-width: 1549px) {
-      left: 10px;
+      /* Расположение справа для мобильных/планшетов */
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: auto;
+      left: auto;
+      width: 280px;
+      max-height: calc(
+         100vh - 180px
+      ); /* Высота экрана минус место для bottomMenu */
+      overflow-y: auto;
+      padding: 15px;
+      margin-bottom: 0;
+      background-color: rgba(34, 34, 34, 0.95);
    }
 }
 .section {

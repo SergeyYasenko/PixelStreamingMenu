@@ -223,7 +223,20 @@ const handleAvailabilityClick = (value) => {
    margin-bottom: 5px;
 
    @media (max-width: 1549px) {
-      padding: 0;
+      /* Расположение справа для мобильных/планшетов */
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: auto;
+      left: auto;
+      width: 280px;
+      max-height: calc(
+         100vh - 180px
+      ); /* Высота экрана минус место для bottomMenu */
+      overflow-y: auto;
+      padding: 15px;
+      margin-bottom: 0;
+      padding-right: 0;
    }
 }
 
@@ -268,11 +281,22 @@ const handleAvailabilityClick = (value) => {
    align-items: stretch;
    flex-wrap: wrap;
    max-width: 1400px;
+
+   @media (max-width: 1549px) {
+      /* Элементы в колонку для мобильных */
+      flex-direction: column;
+      gap: 10px;
+      max-width: 100%;
+   }
 }
 
 .apartment-selector-content > * {
    flex: 0 1 auto;
    align-self: stretch;
+
+   @media (max-width: 1549px) {
+      width: 100%;
+   }
 }
 
 .availability-selector {

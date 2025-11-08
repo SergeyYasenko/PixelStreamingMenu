@@ -75,6 +75,7 @@ const corpRows = computed(() => {
 
 <style scoped>
 .house-body-top {
+   min-width: 200px;
    width: 100%;
    display: flex;
    align-items: center;
@@ -93,8 +94,8 @@ const corpRows = computed(() => {
 }
 
 .house-body-logo-img {
-   width: 30px;
-   height: 30px;
+   width: 50px;
+   height: 50px;
    margin-bottom: 5px;
    user-select: none;
    pointer-events: none;

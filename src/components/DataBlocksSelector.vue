@@ -186,7 +186,21 @@ const handleItemClick = (item) => {
    margin-bottom: 5px;
 
    @media (max-width: 1549px) {
-      padding: 0;
+      /* Расположение справа для мобильных/планшетов */
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: auto;
+      left: auto;
+      width: 280px;
+      max-height: calc(
+         100vh - 200px
+      ); /* Высота экрана минус место для bottomMenu */
+      overflow-y: auto;
+      padding: 15px;
+      margin-bottom: 0;
+      background-color: rgba(34, 34, 34, 0.95);
+      backdrop-filter: blur(10px);
    }
 }
 
@@ -234,8 +248,11 @@ const handleItemClick = (item) => {
    max-width: 1400px;
 
    @media (max-width: 1549px) {
-      gap: 20px;
-      padding: 0 15px;
+      /* Элементы в колонку для мобильных */
+      flex-direction: column;
+      gap: 10px;
+      padding: 0;
+      max-width: 100%;
    }
 }
 
@@ -245,6 +262,10 @@ const handleItemClick = (item) => {
    border: 1px solid rgba(255, 255, 255, 0.1);
    border-radius: 6px;
    transition: all 0.3s ease;
+
+   @media (max-width: 1549px) {
+      width: 100%;
+   }
 }
 
 .data-block-header {

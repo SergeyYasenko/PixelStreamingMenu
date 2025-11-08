@@ -380,12 +380,18 @@ const handleFirstPersonView = (data) => {
 }
 
 .house-body {
-   width: 180px;
+   min-width: 180px;
+   max-width: 250px;
+   width: 100%;
    position: absolute;
    top: 0;
    left: 0;
    z-index: 5;
    pointer-events: auto;
+   @media (max-width: 1549px) {
+      display: flex;
+      gap: 15px;
+   }
 }
 
 .bottom-menu-wrapper {

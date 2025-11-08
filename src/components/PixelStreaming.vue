@@ -183,9 +183,9 @@ const connect = async () => {
             // ============================================
             // НАСТРОЙКИ ВИДЕО КОДЕКА
             // ============================================
-            PreferH264: false, // Предпочитать H.264 (лучшая совместимость) (default: false)
+            PreferH264: true, // Предпочитать H.264 (лучшая совместимость) (default: false)
             ForceH264: false, // Принудительно использовать H.264 (default: false)
-            PreferVP8: true, // Предпочитать VP8 (лучше для некоторых браузеров) (default: false)
+            PreferVP8: false, // Предпочитать VP8 (лучше для некоторых браузеров) (default: false)
             PreferVP9: false, // Предпочитать VP9 (более эффективный, но меньше поддержка) (default: false)
 
             // ============================================
@@ -197,11 +197,11 @@ const connect = async () => {
             // ============================================
             // НАСТРОЙКИ БИТРЕЙТА (в битах в секунду)
             // ============================================
-            MinBitrate: 300000, // Минимальный битрейт 500kbps (default: 100000)
-            MaxBitrate: 5000000, // Максимальный битрейт 8Mbps (default: 20000000)
-            LowBitrateTimeoutMs: 15000, // Таймаут низкого битрейта 10 сек (default: 10000)
+            MinBitrate: 100, // Минимальный битрейт 500kbps (default: 100000)
+            MaxBitrate: 100000, // Максимальный битрейт 8Mbps (default: 20000000)
+            LowBitrateTimeoutMs: 1000, // Таймаут низкого битрейта 10 сек (default: 10000)
 
-            WebRTCFPS: 24, // Максимальный FPS 30 для стабильности (default: 60)
+            WebRTCFPS: 60, // Максимальный FPS 30 для стабильности (default: 60)
 
             // ============================================
             // НАСТРОЙКИ КАЧЕСТВА ВИДЕО
@@ -302,9 +302,9 @@ const connect = async () => {
                "DegradationPreference",
                "maintain-framerate"
             );
-            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxFPS", 30);
-            pixelStreaming.config.setOptionSettingValue("WebRTC", "MinQP", 20);
-            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxQP", 51);
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxFPS", 60);
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MinQP", 1);
+            pixelStreaming.config.setOptionSettingValue("WebRTC", "MaxQP", 100);
          } catch (e) {
             console.warn(
                "Не удалось применить расширенные настройки WebRTC:",

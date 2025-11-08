@@ -147,7 +147,7 @@ const handleSelect = (value) => {
 }
 
 .grid-selector-item {
-   max-height: 40px;
+   min-height: 30px;
    flex: 1;
    background-color: rgba(34, 34, 34, 0.8);
    border: 1px solid rgba(255, 255, 255, 0.3);
@@ -156,12 +156,15 @@ const handleSelect = (value) => {
    text-align: center;
    cursor: pointer;
    transition: all 0.3s ease;
-   min-height: 30px;
    display: flex;
    align-items: center;
    justify-content: center;
    padding: 0 30px;
    user-select: none;
+
+   @media (max-width: 1549px) {
+      width: 100%;
+   }
 }
 
 .grid-selector-item:hover {

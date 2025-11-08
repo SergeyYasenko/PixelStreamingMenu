@@ -74,6 +74,7 @@ const floorRows = computed(() => {
 <style scoped>
 .house-body-bottom {
    width: 100%;
+   min-width: 200px;
    display: flex;
    flex-direction: column;
    align-items: center;
