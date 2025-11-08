@@ -48,6 +48,17 @@
                PERFORMANCE
             </button>
          </div>
+         <div class="setting-item">
+            <label class="checkbox-label" @click.stop>
+               <input
+                  type="checkbox"
+                  v-model="settings.fullscreenEnabled"
+                  class="checkbox-input"
+               />
+               <span class="checkbox-custom"></span>
+               <span class="setting-text">FULLSCREEN</span>
+            </label>
+         </div>
       </div>
    </div>
 </template>
@@ -70,6 +81,7 @@ const loadSettings = () => {
    return {
       invertYaw: true,
       invertPitch: true,
+      fullscreenEnabled: true, // По умолчанию fullscreen включен
    };
 };
 
@@ -108,6 +120,42 @@ const handleQualityClick = (quality) => {
    }
 };
 
+// Функция для входа/выхода из fullscreen (кросс-браузерная)
+const toggleFullscreen = (enable) => {
+   const elem = document.documentElement;
+
+   if (enable) {
+      // Войти в fullscreen
+      if (elem.requestFullscreen) {
+         elem.requestFullscreen().catch((err) => {
+            console.warn("Не удалось включить fullscreen:", err);
+         });
+      } else if (elem.webkitRequestFullscreen) {
+         // Safari
+         elem.webkitRequestFullscreen();
+      } else if (elem.mozRequestFullScreen) {
+         // Firefox
+         elem.mozRequestFullScreen();
+      } else if (elem.msRequestFullscreen) {
+         // IE/Edge
+         elem.msRequestFullscreen();
+      }
+   } else {
+      // Выйти из fullscreen
+      if (document.exitFullscreen) {
+         document.exitFullscreen().catch((err) => {
+            console.warn("Не удалось выйти из fullscreen:", err);
+         });
+      } else if (document.webkitExitFullscreen) {
+         document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+         document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+         document.msExitFullscreen();
+      }
+   }
+};
+
 // При изменении любого чекбокса отправляем оба состояния и сохраняем
 watch(
    () => settings.value.invertYaw,
@@ -125,9 +173,26 @@ watch(
    }
 );
 
+// При изменении fullscreen переключаем режим
+watch(
+   () => settings.value.fullscreenEnabled,
+   (newValue) => {
+      saveSettings();
+      toggleFullscreen(newValue);
+   }
+);
+
 // При монтировании компонента отправляем текущие настройки на UE
 onMounted(() => {
    sendBothInvertSettings();
+
+   // Включаем fullscreen если он включен в настройках
+   if (settings.value.fullscreenEnabled) {
+      // Небольшая задержка для корректной инициализации
+      setTimeout(() => {
+         toggleFullscreen(true);
+      }, 100);
+   }
 });
 </script>
 

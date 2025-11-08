@@ -318,6 +318,23 @@ const connect = async () => {
          isConnecting.value = false;
          // Настраиваем перехват координат мыши после подключения
          setTimeout(() => setupMouseInterception(), 100);
+
+         // Автоматически включаем fullscreen при подключении (если включено в настройках)
+         setTimeout(() => {
+            const savedSettings = localStorage.getItem("goodiniSettings");
+            const fullscreenEnabled = savedSettings
+               ? JSON.parse(savedSettings).fullscreenEnabled !== false
+               : true; // По умолчанию включен
+
+            if (fullscreenEnabled) {
+               const elem = document.documentElement;
+               if (elem.requestFullscreen) {
+                  elem.requestFullscreen().catch(() => {});
+               } else if (elem.webkitRequestFullscreen) {
+                  elem.webkitRequestFullscreen();
+               }
+            }
+         }, 500);
       });
 
       pixelStreaming.addEventListener("webRtcDisconnected", () => {
