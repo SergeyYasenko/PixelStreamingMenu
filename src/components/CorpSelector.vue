@@ -38,9 +38,9 @@ import { computed } from "vue";
 
 // Конфигурация названий корпусов (для проектов с именованными корпусами)
 const namedCorpsConfig = {
-   "The Royal Yacht": { name: "MAGNOLIA HOTEL APARTMENTS", id: 1 },
-   meydan: { name: "The Royal Yacht Hotel", id: 2 },
-   ramada: { name: "CORALIS", id: 3 },
+   "The Royal Yacht": { name: "The Royal Yacht Hotel", id: 1 },
+   "MAGNOLIA HOTEL APARTMENTS": { name: "MAGNOLIA HOTEL APARTMENTS", id: 2 },
+   coralis: { name: "CORALIS", id: 3 },
 };
 
 const props = defineProps({
@@ -157,15 +157,22 @@ const corpRows = computed(() => {
    font-size: 1.25rem;
    padding: 0 15px;
    text-align: left;
+   border-bottom: 1px solid #fff;
+}
+
+.house-body-top-num-name:last-child {
+   border-bottom: none;
 }
 
 .house-body-top-num:hover {
    background-color: rgba(134, 2, 2, 0.5);
-   border: 1px solid #fff;
+   border-right: 1px solid #fff;
+   border-left: 1px solid #fff;
 }
 
 .house-body-top-num.selected {
    background-color: rgba(134, 2, 2, 0.8);
-   border: 1px solid #fff;
+   border-right: 1px solid #fff;
+   border-left: 1px solid #fff;
 }
 </style>

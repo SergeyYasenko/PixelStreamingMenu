@@ -261,8 +261,8 @@ const toggleMenuCollapse = (menuName) => {
 };
 
 const corps = ref([
-   { id: 1, name: "MAGNOLIA HOTEL APARTMENTS", floorsCount: 22 },
-   { id: 2, name: "The Royal Yacht Hotel", floorsCount: 16 },
+   { id: 1, name: "The Royal Yacht Hotel", floorsCount: 16 },
+   { id: 2, name: "MAGNOLIA HOTEL APARTMENTS", floorsCount: 22 },
    { id: 3, name: "CORALIS", floorsCount: 16 },
 ]);
 
