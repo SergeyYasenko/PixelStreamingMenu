@@ -33,6 +33,36 @@
          @toggleCollapse="toggleMenuCollapse('apartmentCard')"
       />
 
+      <!-- Крестик для выхода -->
+      <div v-if="showExitCross" class="exit-cross" @click="handleExitCross">
+         <svg
+            width="40"
+            height="40"
+            viewBox="0 0 40 40"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+         >
+            <line
+               x1="10"
+               y1="10"
+               x2="30"
+               y2="30"
+               stroke="white"
+               stroke-width="3"
+               stroke-linecap="round"
+            />
+            <line
+               x1="30"
+               y1="10"
+               x2="10"
+               y2="30"
+               stroke="white"
+               stroke-width="3"
+               stroke-linecap="round"
+            />
+         </svg>
+      </div>
+
       <div class="bottom-menu-wrapper">
          <BottomMenu
             @hide="hideAllMenus"
@@ -119,11 +149,20 @@ const externalDataBlocks = ref([]);
 const apartmentCardData = ref(null);
 const showApartmentCard = ref(false);
 
+// Показ крестика для выхода
+const showExitCross = ref(false);
+
 // Обработка данных из Unreal Engine
 watch(
    () => props.lastMessage,
    (newMessage) => {
       if (!newMessage) return;
+
+      // Проверяем на простое сообщение "first"
+      if (newMessage === "first") {
+         showExitCross.value = true;
+         return;
+      }
 
       try {
          const data = JSON.parse(newMessage);
@@ -256,6 +295,9 @@ const selectCorp = (corpId) => {
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
 
+   // Скрываем крестик при выборе корпуса
+   showExitCross.value = false;
+
    // Отправляем данные на Unreal Engine
    emit("sendToEngine", { buildings: String(corpId) });
 };
@@ -264,6 +306,8 @@ const selectFloor = (floorId) => {
    selectedFloor.value = floorId;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
+   // Скрываем крестик при выборе этажа
+   showExitCross.value = false;
    // Отправляем данные на Unreal Engine
    emit("sendToEngine", { floor: String(floorId) });
 };
@@ -282,6 +326,8 @@ const handleApartmentCorpSelect = (corpId) => {
    showApartmentSelector.value = true;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
+   // Скрываем крестик при выборе корпуса в квартирах
+   showExitCross.value = false;
    // НЕ влияем на верхний CorpSelector
 };
 
@@ -289,6 +335,8 @@ const handleApartmentFloorSelect = (floorId) => {
    apartmentSelectedFloor.value = floorId;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
+   // Скрываем крестик при выборе этажа в квартирах
+   showExitCross.value = false;
 };
 
 // Метод для скрытия всех меню и сброса значений
@@ -343,6 +391,8 @@ const showDataBlocksSelector = (type) => {
    showWeatherTime.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
+   // Скрываем крестик при открытии data blocks
+   showExitCross.value = false;
    // Очищаем старые данные перед открытием нового типа
    externalDataBlocks.value = [];
    // Устанавливаем тип данных и открываем компонент
@@ -397,6 +447,8 @@ const showApartmentsSelector = () => {
    showDataBlocks.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
+   // Скрываем крестик при открытии селектора квартир
+   showExitCross.value = false;
    // Открываем ApartmentSelector
    showApartmentSelector.value = true;
 };
@@ -412,6 +464,27 @@ const handleSendToEngine = (data) => {
    if (showApartmentCard.value && !data.hasOwnProperty("apartments")) {
       handleCloseApartmentCard();
    }
+
+   // Скрываем крестик для всех команд КРОМЕ hide, weather, holomode и настроек GoodiniSettings
+   const commandsToKeepCross = [
+      "hide",
+      "weather",
+      "time",
+      "holomode",
+      "invertyaw",
+      "invertpitch",
+      "highsettings",
+      "mediumsettings",
+      "lowsettings",
+   ];
+   const hasCommandToKeep = Object.keys(data).some((key) =>
+      commandsToKeepCross.includes(key)
+   );
+
+   if (!hasCommandToKeep) {
+      showExitCross.value = false;
+   }
+
    emit("sendToEngine", data);
 };
 
@@ -430,6 +503,12 @@ const handleFirstPersonView = (data) => {
    // Закрываем карточку после перехода в режим первого лица
    handleCloseApartmentCard();
    emit("sendToEngine", payload);
+};
+
+// Обработчик клика на крестик
+const handleExitCross = () => {
+   showExitCross.value = false;
+   emit("sendToEngine", { exit: "" });
 };
 </script>
 
@@ -472,5 +551,25 @@ const handleFirstPersonView = (data) => {
    width: 100%;
    pointer-events: auto; /* КРИТИЧНО: Разрешить взаимодействие с меню */
    z-index: 15; /* Выше чем connected-display */
+}
+
+.exit-cross {
+   position: fixed;
+   top: 38px;
+   right: 40px;
+   width: 40px;
+   height: 40px;
+   cursor: pointer;
+   pointer-events: auto;
+   z-index: 10;
+   transition: all 0.3s ease;
+   opacity: 0.8;
+   @media (max-width: 1549px) {
+      top: 73px;
+   }
+}
+
+.exit-cross svg {
+   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 </style>
