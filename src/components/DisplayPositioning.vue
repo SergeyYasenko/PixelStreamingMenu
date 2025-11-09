@@ -1,5 +1,12 @@
 <template>
-   <div class="display-positioning">
+   <div
+      class="display-positioning"
+      :class="{
+         'menu-open': isMenuOpen,
+         'has-open-menus': hasOpenMenus,
+         'has-collapsed-menus': hasCollapsedMenus,
+      }"
+   >
       <div class="display-positioning-wrapper">
          <div class="display-positioning-btn" @click="toggleMenu">
             <img
@@ -64,6 +71,17 @@
 
 <script setup>
 import { ref } from "vue";
+
+const props = defineProps({
+   hasOpenMenus: {
+      type: Boolean,
+      default: false,
+   },
+   hasCollapsedMenus: {
+      type: Boolean,
+      default: false,
+   },
+});
 
 const emit = defineEmits(["sendToEngine"]);
 
@@ -152,9 +170,38 @@ const handleArrowClick = (direction) => {
    right: 0;
    z-index: 15;
    pointer-events: auto;
+   transition: z-index 0s;
 
    @media (max-width: 1549px) {
       top: 75px;
+      z-index: 15;
+   }
+}
+
+.display-positioning.has-open-menus {
+   z-index: 10;
+   transition: z-index 0s;
+
+   @media (max-width: 1549px) {
+      z-index: 10;
+   }
+}
+
+.display-positioning.has-collapsed-menus:not(.has-open-menus) {
+   z-index: 150;
+   transition: z-index 0s 0.4s;
+
+   @media (max-width: 1549px) {
+      z-index: 150;
+   }
+}
+
+.display-positioning.menu-open {
+   z-index: 10001;
+   transition: z-index 0s;
+
+   @media (max-width: 1549px) {
+      z-index: 10001;
    }
 }
 

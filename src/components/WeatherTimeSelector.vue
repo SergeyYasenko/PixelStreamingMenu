@@ -1,259 +1,274 @@
 <template>
    <div class="weather-time-selector">
-      <div class="section">
-         <div class="section-title-wrapper">
-            <div class="section-title-line-left"></div>
-            <div class="section-title">TIME</div>
-            <div class="section-title-line-right"></div>
-         </div>
-         <div class="time-display">
-            <div class="time-value">{{ currentTime }}</div>
-            <div class="time-controls">
-               <div class="time-arrow left" @click="decreaseTime">
-                  <svg
-                     width="12"
-                     height="12"
-                     viewBox="0 0 12 12"
-                     fill="currentColor"
-                  >
-                     <path
-                        d="M7.5 3L4.5 6L7.5 9"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                     />
-                  </svg>
+      <div
+         class="weather-time-wrapper"
+         :class="{ collapsed: props.isCollapsed }"
+      >
+         <button class="collapse-toggle-btn" @click="toggleCollapse">
+            {{ props.isCollapsed ? "◀" : "▶" }}
+         </button>
+         <div class="weather-time-content">
+            <div class="section">
+               <div class="section-title-wrapper">
+                  <div class="section-title-line-left"></div>
+                  <div class="section-title">TIME</div>
+                  <div class="section-title-line-right"></div>
                </div>
-               <div class="time-arrow right" @click="increaseTime">
-                  <svg
-                     width="12"
-                     height="12"
-                     viewBox="0 0 12 12"
-                     fill="currentColor"
-                  >
-                     <path
-                        d="M4.5 3L7.5 6L4.5 9"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                     />
-                  </svg>
-               </div>
-            </div>
-         </div>
-         <div class="time-slider-container">
-            <input
-               type="range"
-               min="0"
-               max="100"
-               :value="timeSliderPosition"
-               @input="handleSliderChange"
-               class="time-slider-input"
-            />
-            <div class="time-slider-track">
-               <div
-                  class="time-slider-handle"
-                  :style="{ left: timeSliderPosition + '%' }"
-               ></div>
-            </div>
-         </div>
-      </div>
-
-      <!-- DATE Section -->
-      <div class="section">
-         <div class="section-title-wrapper">
-            <div class="section-title-line-left"></div>
-            <div class="section-title">DATE</div>
-            <div class="section-title-line-right"></div>
-         </div>
-         <div class="date-controls">
-            <div class="date-field-container">
-               <div
-                  class="date-field"
-                  @click="showMonthDropdown = !showMonthDropdown"
-               >
-                  {{ currentMonth }}
-                  <div class="dropdown-arrow">▼</div>
-               </div>
-               <div v-if="showMonthDropdown" class="dropdown-menu">
-                  <div
-                     v-for="month in months"
-                     :key="month"
-                     class="dropdown-item"
-                     @click="selectMonth(month)"
-                  >
-                     {{ month }}
+               <div class="time-display">
+                  <div class="time-value">{{ currentTime }}</div>
+                  <div class="time-controls">
+                     <div class="time-arrow left" @click="decreaseTime">
+                        <svg
+                           width="12"
+                           height="12"
+                           viewBox="0 0 12 12"
+                           fill="currentColor"
+                        >
+                           <path
+                              d="M7.5 3L4.5 6L7.5 9"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              fill="none"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                           />
+                        </svg>
+                     </div>
+                     <div class="time-arrow right" @click="increaseTime">
+                        <svg
+                           width="12"
+                           height="12"
+                           viewBox="0 0 12 12"
+                           fill="currentColor"
+                        >
+                           <path
+                              d="M4.5 3L7.5 6L4.5 9"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              fill="none"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                           />
+                        </svg>
+                     </div>
                   </div>
                </div>
-            </div>
-            <div class="date-field-container">
-               <div
-                  class="date-field"
-                  @click="showDayDropdown = !showDayDropdown"
-               >
-                  {{ currentDay }}
-                  <div class="dropdown-arrow">▼</div>
-               </div>
-               <div v-if="showDayDropdown" class="dropdown-menu">
-                  <div
-                     v-for="day in days"
-                     :key="day"
-                     class="dropdown-item"
-                     @click="selectDay(day)"
-                  >
-                     {{ day }}
-                  </div>
-               </div>
-            </div>
-            <div class="date-field-container">
-               <div
-                  class="date-field"
-                  @click="showYearDropdown = !showYearDropdown"
-               >
-                  {{ currentYear }}
-                  <div class="dropdown-arrow">▼</div>
-               </div>
-               <div v-if="showYearDropdown" class="dropdown-menu">
-                  <div
-                     v-for="year in years"
-                     :key="year"
-                     class="dropdown-item"
-                     @click="selectYear(year)"
-                  >
-                     {{ year }}
-                  </div>
-               </div>
-            </div>
-         </div>
-      </div>
-
-      <!-- LOCATION Section -->
-      <div class="section">
-         <div class="section-title-wrapper">
-            <div class="section-title-line-left"></div>
-            <div class="section-title">LOCATION</div>
-            <div class="section-title-line-right"></div>
-         </div>
-         <div class="location-controls">
-            <div class="location-field">
-               <span class="field-label">Lat:</span>
-               <div
-                  class="draggable-input-container"
-                  @mousedown="startDrag('lat', $event)"
-               >
+               <div class="time-slider-container">
                   <input
-                     type="text"
-                     v-model="latitude"
-                     class="draggable-input"
-                     min="-180"
-                     max="180"
-                     @keydown="handleKeydown('lat', $event)"
-                     @blur="validateInput('lat')"
+                     type="range"
+                     min="0"
+                     max="100"
+                     :value="timeSliderPosition"
+                     @input="handleSliderChange"
+                     class="time-slider-input"
                   />
+                  <div class="time-slider-track">
+                     <div
+                        class="time-slider-handle"
+                        :style="{ left: timeSliderPosition + '%' }"
+                     ></div>
+                  </div>
                </div>
             </div>
-            <div class="location-field">
-               <span class="field-label">Long:</span>
-               <div
-                  class="draggable-input-container"
-                  @mousedown="startDrag('long', $event)"
-               >
-                  <input
-                     type="text"
-                     v-model="longitude"
-                     class="draggable-input"
-                     min="-180"
-                     max="180"
-                     @keydown="handleKeydown('long', $event)"
-                     @blur="validateInput('long')"
-                  />
-               </div>
-            </div>
-         </div>
-         <div class="globe-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-               <path
-                  d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
-               />
-            </svg>
-         </div>
-         <div class="timezone-field">
-            <span class="field-label">Time Zone:</span>
-            <div
-               class="draggable-input-container"
-               @mousedown="startDrag('timezone', $event)"
-            >
-               <input
-                  type="text"
-                  v-model="timeZone"
-                  class="draggable-input field-value"
-                  min="-12"
-                  max="12"
-                  @keydown="handleKeydown('timezone', $event)"
-                  @blur="validateInput('timezone')"
-               />
-            </div>
-         </div>
-      </div>
 
-      <!-- WEATHER Section -->
-      <div class="section">
-         <div class="section-title-wrapper">
-            <div class="section-title-line-left"></div>
-            <div class="section-title">WEATHER</div>
-            <div class="section-title-line-right"></div>
-         </div>
-         <div class="weather-display-container">
-            <div
-               class="weather-display"
-               @click="showWeatherDropdown = !showWeatherDropdown"
-            >
-               <div class="weather-text">
-                  <img
-                     :src="getCurrentWeatherImage()"
-                     alt="weather"
-                     class="weather-icon"
-                  />
-                  {{ currentWeather }}
+            <!-- DATE Section -->
+            <div class="section">
+               <div class="section-title-wrapper">
+                  <div class="section-title-line-left"></div>
+                  <div class="section-title">DATE</div>
+                  <div class="section-title-line-right"></div>
                </div>
-               <div class="weather-arrow">
+               <div class="date-controls">
+                  <div class="date-field-container">
+                     <div
+                        class="date-field"
+                        @click="showMonthDropdown = !showMonthDropdown"
+                     >
+                        {{ currentMonth }}
+                        <div class="dropdown-arrow">▼</div>
+                     </div>
+                     <div v-if="showMonthDropdown" class="dropdown-menu">
+                        <div
+                           v-for="month in months"
+                           :key="month"
+                           class="dropdown-item"
+                           @click="selectMonth(month)"
+                        >
+                           {{ month }}
+                        </div>
+                     </div>
+                  </div>
+                  <div class="date-field-container">
+                     <div
+                        class="date-field"
+                        @click="showDayDropdown = !showDayDropdown"
+                     >
+                        {{ currentDay }}
+                        <div class="dropdown-arrow">▼</div>
+                     </div>
+                     <div v-if="showDayDropdown" class="dropdown-menu">
+                        <div
+                           v-for="day in days"
+                           :key="day"
+                           class="dropdown-item"
+                           @click="selectDay(day)"
+                        >
+                           {{ day }}
+                        </div>
+                     </div>
+                  </div>
+                  <div class="date-field-container">
+                     <div
+                        class="date-field"
+                        @click="showYearDropdown = !showYearDropdown"
+                     >
+                        {{ currentYear }}
+                        <div class="dropdown-arrow">▼</div>
+                     </div>
+                     <div v-if="showYearDropdown" class="dropdown-menu">
+                        <div
+                           v-for="year in years"
+                           :key="year"
+                           class="dropdown-item"
+                           @click="selectYear(year)"
+                        >
+                           {{ year }}
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <!-- LOCATION Section -->
+            <div class="section">
+               <div class="section-title-wrapper">
+                  <div class="section-title-line-left"></div>
+                  <div class="section-title">LOCATION</div>
+                  <div class="section-title-line-right"></div>
+               </div>
+               <div class="location-controls">
+                  <div class="location-field">
+                     <span class="field-label">Lat:</span>
+                     <div
+                        class="draggable-input-container"
+                        @mousedown="startDrag('lat', $event)"
+                     >
+                        <input
+                           type="text"
+                           v-model="latitude"
+                           class="draggable-input"
+                           min="-180"
+                           max="180"
+                           @keydown="handleKeydown('lat', $event)"
+                           @blur="validateInput('lat')"
+                        />
+                     </div>
+                  </div>
+                  <div class="location-field">
+                     <span class="field-label">Long:</span>
+                     <div
+                        class="draggable-input-container"
+                        @mousedown="startDrag('long', $event)"
+                     >
+                        <input
+                           type="text"
+                           v-model="longitude"
+                           class="draggable-input"
+                           min="-180"
+                           max="180"
+                           @keydown="handleKeydown('long', $event)"
+                           @blur="validateInput('long')"
+                        />
+                     </div>
+                  </div>
+               </div>
+               <div class="globe-icon">
                   <svg
-                     width="12"
-                     height="12"
-                     viewBox="0 0 12 12"
+                     width="24"
+                     height="24"
+                     viewBox="0 0 24 24"
                      fill="currentColor"
                   >
                      <path
-                        d="M3 4.5L6 7.5L9 4.5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        fill="none"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
                      />
                   </svg>
                </div>
+               <div class="timezone-field">
+                  <span class="field-label">Time Zone:</span>
+                  <div
+                     class="draggable-input-container"
+                     @mousedown="startDrag('timezone', $event)"
+                  >
+                     <input
+                        type="text"
+                        v-model="timeZone"
+                        class="draggable-input field-value"
+                        min="-12"
+                        max="12"
+                        @keydown="handleKeydown('timezone', $event)"
+                        @blur="validateInput('timezone')"
+                     />
+                  </div>
+               </div>
             </div>
-            <div
-               v-if="showWeatherDropdown"
-               class="dropdown-menu weather-dropdown weather-dropdown-up"
-            >
-               <div
-                  v-for="(weather, index) in weatherOptions"
-                  :key="index"
-                  class="dropdown-item"
-                  @click="selectWeather(weather)"
-               >
-                  <img
-                     :src="weather.image"
-                     alt="weather"
-                     class="weather-icon"
-                  />
-                  {{ weather.name }}
+
+            <!-- WEATHER Section -->
+            <div class="section">
+               <div class="section-title-wrapper">
+                  <div class="section-title-line-left"></div>
+                  <div class="section-title">WEATHER</div>
+                  <div class="section-title-line-right"></div>
+               </div>
+               <div class="weather-display-container">
+                  <div
+                     class="weather-display"
+                     @click="showWeatherDropdown = !showWeatherDropdown"
+                  >
+                     <div class="weather-text">
+                        <img
+                           :src="getCurrentWeatherImage()"
+                           alt="weather"
+                           class="weather-icon"
+                        />
+                        {{ currentWeather }}
+                     </div>
+                     <div class="weather-arrow">
+                        <svg
+                           width="12"
+                           height="12"
+                           viewBox="0 0 12 12"
+                           fill="currentColor"
+                        >
+                           <path
+                              d="M3 4.5L6 7.5L9 4.5"
+                              stroke="currentColor"
+                              stroke-width="1.5"
+                              fill="none"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                           />
+                        </svg>
+                     </div>
+                  </div>
+                  <div
+                     v-if="showWeatherDropdown"
+                     class="dropdown-menu weather-dropdown weather-dropdown-up"
+                  >
+                     <div
+                        v-for="(weather, index) in weatherOptions"
+                        :key="index"
+                        class="dropdown-item"
+                        @click="selectWeather(weather)"
+                     >
+                        <img
+                           :src="weather.image"
+                           alt="weather"
+                           class="weather-icon"
+                        />
+                        {{ weather.name }}
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
@@ -264,7 +279,19 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 
-const emit = defineEmits(["close", "sendToEngine"]);
+const props = defineProps({
+   isCollapsed: {
+      type: Boolean,
+      default: false,
+   },
+});
+
+const emit = defineEmits(["close", "sendToEngine", "toggleCollapse"]);
+
+// Обработчик клика по кнопке сворачивания
+const toggleCollapse = () => {
+   emit("toggleCollapse");
+};
 
 // Time state
 const currentTime = ref("3:00 PM");
@@ -611,31 +638,89 @@ onMounted(() => {
    left: 30px;
    width: 300px;
    background-color: rgba(34, 34, 34, 0.5);
-   backdrop-filter: blur(5px);
    border-radius: 8px;
    padding: 0 20px;
    z-index: 10000;
    pointer-events: auto;
-   border: 1px solid rgba(255, 255, 255, 0.2);
    margin-bottom: 5px;
 
    @media (max-width: 1549px) {
-      /* Расположение справа для мобильных/планшетов */
       position: fixed;
       top: 0;
       right: 0;
       bottom: auto;
       left: auto;
-      width: 280px;
-      max-height: calc(
-         100vh - 180px
-      ); /* Высота экрана минус место для bottomMenu */
-      overflow-y: auto;
-      padding: 15px;
+      width: auto;
+      height: auto;
+      z-index: 10000;
+      overflow: visible;
+      padding: 0;
       margin-bottom: 0;
-      background-color: rgba(34, 34, 34, 0.95);
+      background-color: transparent;
    }
 }
+
+.weather-time-wrapper {
+   @media (max-width: 1549px) {
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      transition: transform 0.4s ease-in-out;
+      transform: translateX(0);
+   }
+}
+
+.weather-time-wrapper.collapsed {
+   @media (max-width: 1549px) {
+      transform: translateX(
+         calc(100% - 50px)
+      ); /* Уезжает, оставляя только кнопку */
+   }
+}
+
+/* Кнопка сворачивания для мобильных */
+.collapse-toggle-btn {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: block;
+      position: sticky;
+      bottom: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 50; /* Ниже камеры elevated (150) */
+      user-select: none;
+      flex-shrink: 0;
+   }
+}
+
+.collapse-toggle-btn:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
+   }
+}
+
+/* Контент для мобильных */
+.weather-time-content {
+   @media (max-width: 1549px) {
+      background-color: rgba(34, 34, 34, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 6px;
+      padding: 15px;
+      max-width: 280px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+   }
+}
+
 .section {
    margin-bottom: 5px;
 }

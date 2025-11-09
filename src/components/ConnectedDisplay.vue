@@ -16,15 +16,21 @@
                @hideFloors="hideFloors"
             />
          </div>
-         <DisplayPositioning @sendToEngine="handleSendToEngine" />
+         <DisplayPositioning
+            :has-open-menus="hasOpenExpandedMenus"
+            :has-collapsed-menus="hasCollapsedMenus"
+            @sendToEngine="handleSendToEngine"
+         />
       </div>
 
       <!-- Карточка квартиры -->
       <ApartmentCard
          :apartment-data="apartmentCardData"
          :is-visible="showApartmentCard"
+         :is-collapsed="menusCollapsed.apartmentCard"
          @close="handleCloseApartmentCard"
          @apartments="handleFirstPersonView"
+         @toggleCollapse="toggleMenuCollapse('apartmentCard')"
       />
 
       <div class="bottom-menu-wrapper">
@@ -46,6 +52,7 @@
             :selected-rooms="selectedRooms"
             :selected-availability="selectedAvailability"
             :corps="corps"
+            :is-collapsed="menusCollapsed.apartment"
             @update:selectedCorp="handleApartmentCorpSelect"
             @update:selectedFloor="handleApartmentFloorSelect"
             @update:selectedAreaMin="selectedAreaMin = $event"
@@ -54,18 +61,23 @@
                (value) => (selectedAvailability = value)
             "
             @sendToEngine="handleSendToEngine"
+            @toggleCollapse="toggleMenuCollapse('apartment')"
          />
          <WeatherTimeSelector
             v-show="showWeatherTime"
+            :is-collapsed="menusCollapsed.weather"
             @close="hideWeatherTimeSelector"
             @sendToEngine="handleSendToEngine"
+            @toggleCollapse="toggleMenuCollapse('weather')"
          />
          <DataBlocksSelector
             v-if="showDataBlocks"
             :selected-type="dataBlocksType"
             :external-data="externalDataBlocks"
+            :is-collapsed="menusCollapsed.datablocks"
             @close="hideDataBlocksSelector"
             @sendToEngine="handleSendToEngine"
+            @toggleCollapse="toggleMenuCollapse('datablocks')"
          />
       </div>
    </div>
@@ -156,11 +168,63 @@ const selectedAreaMin = ref(0);
 const selectedRooms = ref([]);
 const selectedAvailability = ref([]);
 
+// Состояния сворачивания меню для управления z-index камеры
+const menusCollapsed = ref({
+   apartment: false,
+   weather: false,
+   datablocks: false,
+   apartmentCard: false,
+});
+
+// Проверка открытых и развернутых меню для управления z-index камеры
+const hasOpenExpandedMenus = computed(() => {
+   // Меню открыто И развернуто (не свернуто)
+   const apartmentOpen =
+      showApartmentSelector.value && !menusCollapsed.value.apartment;
+   const weatherOpen = showWeatherTime.value && !menusCollapsed.value.weather;
+   const datablocksOpen =
+      showDataBlocks.value && !menusCollapsed.value.datablocks;
+   const cardOpen =
+      showApartmentCard.value && !menusCollapsed.value.apartmentCard;
+
+   return apartmentOpen || weatherOpen || datablocksOpen || cardOpen;
+});
+
+// Есть ли хотя бы одно свернутое меню (для поднятия z-index камеры)
+const hasCollapsedMenus = computed(() => {
+   // Меню открыто И свернуто
+   const apartmentCollapsed =
+      showApartmentSelector.value && menusCollapsed.value.apartment;
+   const weatherCollapsed =
+      showWeatherTime.value && menusCollapsed.value.weather;
+   const datablocksCollapsed =
+      showDataBlocks.value && menusCollapsed.value.datablocks;
+   const cardCollapsed =
+      showApartmentCard.value && menusCollapsed.value.apartmentCard;
+
+   return (
+      apartmentCollapsed ||
+      weatherCollapsed ||
+      datablocksCollapsed ||
+      cardCollapsed
+   );
+});
+
+// Обработчик сворачивания меню (сохраняем состояние)
+const handleMenuCollapsed = (menuName, isCollapsed) => {
+   menusCollapsed.value[menuName] = isCollapsed;
+};
+
+// Методы для управления состоянием сворачивания
+const toggleMenuCollapse = (menuName) => {
+   menusCollapsed.value[menuName] = !menusCollapsed.value[menuName];
+   handleMenuCollapsed(menuName, menusCollapsed.value[menuName]);
+};
+
 const corps = ref([
-   { id: 1, name: "The Royal Yacht", floorsCount: 22 },
-   { id: 2, name: "meydan", floorsCount: 16 },
-   { id: 3, name: "ramada", floorsCount: 16 },
-   { id: 4, name: "Dubai Marina", floorsCount: 22 },
+   { id: 1, name: "MAGNOLIA HOTEL APARTMENTS", floorsCount: 22 },
+   { id: 2, name: "The Royal Yacht Hotel", floorsCount: 16 },
+   { id: 3, name: "CORALIS", floorsCount: 16 },
 ]);
 
 const floors = computed(() => {
@@ -180,14 +244,14 @@ const floors = computed(() => {
 const selectCorp = (corpId) => {
    selectedCorp.value = corpId;
    selectedFloor.value = null;
-   showFloors.value = true;
+   // showFloors.value = true; // ЗАКОММЕНТИРОВАНО: не показываем этажи
 
    // Закрываем другие компоненты над нижним меню
    showWeatherTime.value = false;
    showDataBlocks.value = false;
 
    apartmentSelectedFloor.value = 13;
-   showApartmentSelector.value = true;
+   // showApartmentSelector.value = true; // ЗАКОММЕНТИРОВАНО: не показываем блок квартиры
 
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
@@ -231,7 +295,7 @@ const handleApartmentFloorSelect = (floorId) => {
 const hideAllMenus = () => {
    // Скрываем меню
    showFloors.value = false;
-   showApartmentSelector.value = false;
+   hideApartmentSelector();
    showWeatherTime.value = false;
    showDataBlocks.value = false;
 
@@ -254,7 +318,7 @@ const hideAllMenus = () => {
 const showWeatherTimeSelector = () => {
    // Закрываем другие компоненты над нижним меню
    showFloors.value = false;
-   showApartmentSelector.value = false;
+   hideApartmentSelector();
    showDataBlocks.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
@@ -264,12 +328,18 @@ const showWeatherTimeSelector = () => {
 
 const hideWeatherTimeSelector = () => {
    showWeatherTime.value = false;
+   // НЕ сбрасываем menusCollapsed.value.weather - сохраняем состояние
+};
+
+const hideApartmentSelector = () => {
+   showApartmentSelector.value = false;
+   // НЕ сбрасываем menusCollapsed.value.apartment - сохраняем состояние
 };
 
 const showDataBlocksSelector = (type) => {
    // Закрываем другие компоненты над нижним меню
    showFloors.value = false;
-   showApartmentSelector.value = false;
+   hideApartmentSelector();
    showWeatherTime.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
@@ -277,13 +347,14 @@ const showDataBlocksSelector = (type) => {
    externalDataBlocks.value = [];
    // Устанавливаем тип данных и открываем компонент
    dataBlocksType.value = type;
-   showDataBlocks.value = true;
+   // showDataBlocks.value = true;
 };
 
 const hideDataBlocksSelector = () => {
    showDataBlocks.value = false;
    // Очищаем данные при закрытии
    externalDataBlocks.value = [];
+   // НЕ сбрасываем menusCollapsed.value.datablocks - сохраняем состояние
 };
 
 // Обработка переключения Holo mode
@@ -312,7 +383,7 @@ const handleToggleHoloMode = ({ wasActive, isNowActive }) => {
 const showGoodiniSettingsSelector = () => {
    // Закрываем другие компоненты над нижним меню
    showFloors.value = false;
-   showApartmentSelector.value = false;
+   hideApartmentSelector();
    showWeatherTime.value = false;
    showDataBlocks.value = false;
    // Закрываем карточку квартиры

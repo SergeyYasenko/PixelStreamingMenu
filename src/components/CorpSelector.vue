@@ -6,9 +6,9 @@
             src="../assets/icons/logo.png"
             alt="logo"
          />
-         <div class="house-body-logo-title">BOTANICA</div>
+         <div class="house-body-logo-title">PALLADIUM</div>
       </div>
-      <div class="house-body-top-title">Выберите корпус</div>
+      <div class="house-body-top-title">Select residence</div>
       <div class="house-body-top-num-wrapper">
          <div
             class="house-body-top-num-row"
@@ -38,11 +38,9 @@ import { computed } from "vue";
 
 // Конфигурация названий корпусов (для проектов с именованными корпусами)
 const namedCorpsConfig = {
-   "The Royal Yacht": { name: "The Royal Yacht", id: 1 },
-   meydan: { name: "meydan", id: 2 },
-   ramada: { name: "ramada", id: 3 },
-   "Dubai Marina": { name: "Dubai Marina", id: 4 },
-   // Добавляйте или изменяйте названия здесь
+   "The Royal Yacht": { name: "MAGNOLIA HOTEL APARTMENTS", id: 1 },
+   meydan: { name: "The Royal Yacht Hotel", id: 2 },
+   ramada: { name: "CORALIS", id: 3 },
 };
 
 const props = defineProps({
@@ -118,7 +116,7 @@ const corpRows = computed(() => {
 
 .house-body-top-num-wrapper {
    width: 100%;
-   max-height: 98px;
+   max-height: 160px;
    overflow-y: auto;
    display: flex;
    flex-direction: column;

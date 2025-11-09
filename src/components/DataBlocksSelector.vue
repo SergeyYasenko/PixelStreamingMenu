@@ -1,27 +1,37 @@
 <template>
    <div class="data-blocks-selector">
-      <div class="data-blocks-header">
-         <div class="data-blocks-title">{{ currentData.title }}</div>
-         <div class="data-blocks-gradient-line"></div>
-      </div>
-      <div class="data-blocks-content">
-         <div
-            v-for="block in currentData.blocks"
-            :key="block.id"
-            class="data-block"
-         >
-            <div class="data-block-header">
-               <div class="data-block-title">{{ block.title }}</div>
-               <div class="data-block-icon">☐</div>
+      <div
+         class="data-blocks-wrapper"
+         :class="{ collapsed: props.isCollapsed }"
+      >
+         <button class="collapse-toggle-btn" @click="toggleCollapse">
+            {{ props.isCollapsed ? "◀" : "▶" }}
+         </button>
+         <div class="data-blocks-inner-wrapper">
+            <div class="data-blocks-header">
+               <div class="data-blocks-title">{{ currentData.title }}</div>
+               <div class="data-blocks-gradient-line"></div>
             </div>
-            <div class="data-block-items">
+            <div class="data-blocks-content">
                <div
-                  v-for="item in block.items"
-                  :key="item.id"
-                  class="data-block-item"
-                  @click="handleItemClick(item)"
+                  v-for="block in currentData.blocks"
+                  :key="block.id"
+                  class="data-block"
                >
-                  {{ item.name }}
+                  <div class="data-block-header">
+                     <div class="data-block-title">{{ block.title }}</div>
+                     <div class="data-block-icon">☐</div>
+                  </div>
+                  <div class="data-block-items">
+                     <div
+                        v-for="item in block.items"
+                        :key="item.id"
+                        class="data-block-item"
+                        @click="handleItemClick(item)"
+                     >
+                        {{ item.name }}
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
@@ -40,6 +50,10 @@ const props = defineProps({
    externalData: {
       type: Array,
       default: () => [],
+   },
+   isCollapsed: {
+      type: Boolean,
+      default: false,
    },
 });
 
@@ -164,7 +178,12 @@ const currentData = computed(() => {
    return localData;
 });
 
-const emit = defineEmits(["close", "sendToEngine"]);
+const emit = defineEmits(["close", "sendToEngine", "toggleCollapse"]);
+
+// Обработчик клика по кнопке сворачивания
+const toggleCollapse = () => {
+   emit("toggleCollapse");
+};
 
 // Обработчик клика по элементу
 const handleItemClick = (item) => {
@@ -186,21 +205,73 @@ const handleItemClick = (item) => {
    margin-bottom: 5px;
 
    @media (max-width: 1549px) {
-      /* Расположение справа для мобильных/планшетов */
       position: fixed;
       top: 0;
       right: 0;
       bottom: auto;
       left: auto;
-      width: 280px;
-      max-height: calc(
-         100vh - 200px
-      ); /* Высота экрана минус место для bottomMenu */
-      overflow-y: auto;
-      padding: 15px;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      padding: 0;
       margin-bottom: 0;
-      background-color: rgba(34, 34, 34, 0.95);
+      background-color: transparent;
+   }
+}
+
+.data-blocks-wrapper {
+   @media (max-width: 1549px) {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      transition: transform 0.4s ease-in-out;
+      transform: translateX(0);
+   }
+}
+
+.data-blocks-wrapper.collapsed {
+   @media (max-width: 1549px) {
+      transform: translateX(calc(100% - 50px));
+   }
+}
+
+.data-blocks-inner-wrapper {
+   @media (max-width: 1549px) {
+      background-color: rgba(34, 34, 34, 0.5);
       backdrop-filter: blur(10px);
+      border-radius: 6px;
+      padding: 15px;
+      max-width: 350px;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
+   }
+}
+
+.collapse-toggle-btn {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: block;
+      position: sticky;
+      top: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 50;
+      user-select: none;
+      flex-shrink: 0;
+   }
+}
+
+.collapse-toggle-btn:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
    }
 }
 
@@ -208,6 +279,10 @@ const handleItemClick = (item) => {
    width: 100%;
    margin-bottom: 10px;
    position: relative;
+
+   @media (max-width: 1549px) {
+      margin-bottom: 10px;
+   }
 }
 
 .data-blocks-title {
@@ -248,7 +323,6 @@ const handleItemClick = (item) => {
    max-width: 1400px;
 
    @media (max-width: 1549px) {
-      /* Элементы в колонку для мобильных */
       flex-direction: column;
       gap: 10px;
       padding: 0;
@@ -321,7 +395,6 @@ const handleItemClick = (item) => {
    background-color: rgba(255, 255, 255, 0.2);
 }
 
-/* Стили для скроллбара */
 .data-block-items::-webkit-scrollbar {
    width: 4px;
 }

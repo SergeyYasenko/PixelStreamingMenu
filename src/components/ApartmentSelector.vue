@@ -1,66 +1,76 @@
 <template>
    <div class="apartment-selector">
-      <div class="apartment-selector-header">
-         <div class="apartment-selector-title">КВАРТИРЫ</div>
-         <div class="apartment-selector-gradient-line"></div>
-      </div>
-      <div class="apartment-selector-content">
-         <!-- ВЫБОР КОРПУСА -->
-         <GridSelector
-            title="ВЫБОР КОРПУСА"
-            :items="corpItems"
-            :selected-value="selectedCorp"
-            :columns="2"
-            @select="handleCorpSelect"
-            @itemClick="handleCorpClick"
-         />
+      <div
+         class="apartment-selector-wrapper"
+         :class="{ collapsed: props.isCollapsed }"
+      >
+         <button class="collapse-toggle-btn" @click="toggleCollapse">
+            {{ props.isCollapsed ? "◀" : "▶" }}
+         </button>
+         <div class="apartment-selector-inner-wrapper">
+            <div class="apartment-selector-header">
+               <div class="apartment-selector-title">КВАРТИРЫ</div>
+               <div class="apartment-selector-gradient-line"></div>
+            </div>
+            <div class="apartment-selector-content">
+               <!-- ВЫБОР КОРПУСА -->
+               <GridSelector
+                  title="ВЫБОР КОРПУСА"
+                  :items="corpItems"
+                  :selected-value="selectedCorp"
+                  :columns="2"
+                  @select="handleCorpSelect"
+                  @itemClick="handleCorpClick"
+               />
 
-         <!-- ВЫБОР ЭТАЖА -->
-         <RangeInput
-            v-model="floorValue"
-            title="ВЫБОР ЭТАЖА"
-            :min="2"
-            :max="maxFloor"
-            :step="1"
-            :format-value="formatFloor"
-            value-prefix="ЭТАЖ"
-            value-suffix="-Й"
-         />
+               <!-- ВЫБОР ЭТАЖА -->
+               <RangeInput
+                  v-model="floorValue"
+                  title="ВЫБОР ЭТАЖА"
+                  :min="2"
+                  :max="maxFloor"
+                  :step="1"
+                  :format-value="formatFloor"
+                  value-prefix="ЭТАЖ"
+                  value-suffix="-Й"
+               />
 
-         <!-- ПЛОЩАДЬ -->
-         <RangeInput
-            v-model="areaValue"
-            title="ПЛОЩАДЬ"
-            :min="0"
-            :max="120"
-            :step="1"
-            :format-value="formatArea"
-            value-prefix="Min:"
-            value-suffix=" м.кв."
-         />
+               <!-- ПЛОЩАДЬ -->
+               <RangeInput
+                  v-model="areaValue"
+                  title="ПЛОЩАДЬ"
+                  :min="0"
+                  :max="120"
+                  :step="1"
+                  :format-value="formatArea"
+                  value-prefix="Min:"
+                  value-suffix=" м.кв."
+               />
 
-         <!-- КОЛ-ВО КОМНАТ -->
-         <GridSelector
-            title="КОЛ-ВО КОМНАТ"
-            :items="roomItems"
-            :selected-value="selectedRooms"
-            :columns="2"
-            multiple
-            @select="handleRoomsSelect"
-            @itemClick="handleRoomClick"
-         />
+               <!-- КОЛ-ВО КОМНАТ -->
+               <GridSelector
+                  title="КОЛ-ВО КОМНАТ"
+                  :items="roomItems"
+                  :selected-value="selectedRooms"
+                  :columns="2"
+                  multiple
+                  @select="handleRoomsSelect"
+                  @itemClick="handleRoomClick"
+               />
 
-         <!-- ДОСТУПНОСТЬ -->
-         <GridSelector
-            title="ДОСТУПНОСТЬ"
-            :items="availabilityItems"
-            :selected-value="selectedAvailability"
-            :columns="3"
-            multiple
-            @select="handleAvailabilitySelect"
-            @itemClick="handleAvailabilityClick"
-            class="availability-selector"
-         />
+               <!-- ДОСТУПНОСТЬ -->
+               <GridSelector
+                  title="ДОСТУПНОСТЬ"
+                  :items="availabilityItems"
+                  :selected-value="selectedAvailability"
+                  :columns="3"
+                  multiple
+                  @select="handleAvailabilitySelect"
+                  @itemClick="handleAvailabilityClick"
+                  class="availability-selector"
+               />
+            </div>
+         </div>
       </div>
    </div>
 </template>
@@ -95,6 +105,10 @@ const props = defineProps({
       type: Array,
       default: () => [],
    },
+   isCollapsed: {
+      type: Boolean,
+      default: false,
+   },
 });
 
 const emit = defineEmits([
@@ -104,7 +118,13 @@ const emit = defineEmits([
    "update:selectedRooms",
    "update:selectedAvailability",
    "sendToEngine",
+   "toggleCollapse", // Переключение сворачивания (управляется родителем)
 ]);
+
+// Обработчик клика по кнопке сворачивания
+const toggleCollapse = () => {
+   emit("toggleCollapse");
+};
 
 // Данные для корпусов
 const corpItems = computed(() => {
@@ -223,25 +243,83 @@ const handleAvailabilityClick = (value) => {
    margin-bottom: 5px;
 
    @media (max-width: 1549px) {
-      /* Расположение справа для мобильных/планшетов */
       position: fixed;
       top: 0;
       right: 0;
       bottom: auto;
       left: auto;
-      width: 280px;
-      max-height: calc(
-         100vh - 180px
-      ); /* Высота экрана минус место для bottomMenu */
-      overflow-y: auto;
-      padding: 15px;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      padding: 0;
       margin-bottom: 0;
-      padding-right: 0;
+      background-color: transparent;
+   }
+}
+
+.apartment-selector-wrapper {
+   @media (max-width: 1549px) {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      transition: transform 0.4s ease-in-out;
+      transform: translateX(0);
+   }
+}
+
+.apartment-selector-wrapper.collapsed {
+   @media (max-width: 1549px) {
+      transform: translateX(calc(100% - 50px));
+   }
+}
+
+.apartment-selector-inner-wrapper {
+   @media (max-width: 1549px) {
+      background-color: rgba(34, 34, 34, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 6px;
+      padding: 15px;
+      max-width: 280px;
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
    }
 }
 
 .apartment-selector-header {
    width: 100%;
+   position: relative;
+
+   @media (max-width: 1549px) {
+      margin-bottom: 10px;
+   }
+}
+
+.collapse-toggle-btn {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: block;
+      position: sticky;
+      top: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 50;
+      user-select: none;
+      flex-shrink: 0;
+   }
+}
+
+.collapse-toggle-btn:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
+   }
 }
 
 .apartment-selector-title {
@@ -283,7 +361,6 @@ const handleAvailabilityClick = (value) => {
    max-width: 1400px;
 
    @media (max-width: 1549px) {
-      /* Элементы в колонку для мобильных */
       flex-direction: column;
       gap: 10px;
       max-width: 100%;
@@ -310,7 +387,6 @@ const handleAvailabilityClick = (value) => {
    }
 }
 
-/* На экранах ниже 1550px объединяем фоны и делаем wrap с gap 20px */
 @media (max-width: 1549px) {
    .apartment-selector-content {
       gap: 20px;

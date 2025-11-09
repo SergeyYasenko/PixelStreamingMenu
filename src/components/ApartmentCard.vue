@@ -3,11 +3,19 @@
       <div
          v-if="isVisible"
          class="apartment-card-overlay"
+         :class="{ collapsed: props.isCollapsed }"
          @click="handleOverlayClick"
       >
          <div class="apartment-card" @click.stop>
-            <!-- Кнопка закрытия -->
-            <button class="apartment-card-close" @click="handleClose">
+            <button class="apartment-card-collapse" @click="toggleCollapse">
+               {{ props.isCollapsed ? "◀" : "▶" }}
+            </button>
+
+            <button
+               class="apartment-card-close"
+               @click="handleClose"
+               v-show="!props.isCollapsed"
+            >
                <svg
                   width="24"
                   height="24"
@@ -25,98 +33,96 @@
                </svg>
             </button>
 
-            <!-- Изображение планировки -->
-            <div class="apartment-card-image-container">
-               <img
-                  v-if="imageUrl"
-                  :src="imageUrl"
-                  alt="Планировка квартиры"
-                  class="apartment-card-image"
-               />
-               <div v-else class="apartment-card-image-placeholder">
-                  <span>Изображение не доступно</span>
+            <div class="apartment-card-content" v-show="!props.isCollapsed">
+               <div class="apartment-card-image-container">
+                  <img
+                     v-if="imageUrl"
+                     :src="imageUrl"
+                     alt="Планировка квартиры"
+                     class="apartment-card-image"
+                  />
+                  <div v-else class="apartment-card-image-placeholder">
+                     <span>Изображение не доступно</span>
+                  </div>
                </div>
-            </div>
 
-            <!-- Информация о квартире -->
-            <div class="apartment-card-info">
-               <!-- ID квартиры -->
-               <h2 v-if="apartmentData?.ApartmentId" class="apartment-card-id">
-                  {{ apartmentData.ApartmentId }}
-               </h2>
-
-               <div class="apartment-card-details">
-                  <!-- SURFACE -->
-                  <div
-                     v-if="apartmentData?.Surface"
-                     class="apartment-card-detail"
+               <div class="apartment-card-info">
+                  <h2
+                     v-if="apartmentData?.ApartmentId"
+                     class="apartment-card-id"
                   >
-                     <span class="detail-label">SURFACE</span>
-                     <span class="detail-value">{{ formattedSurface }}</span>
-                  </div>
+                     {{ apartmentData.ApartmentId }}
+                  </h2>
 
-                  <!-- PRICE -->
-                  <div
-                     v-if="apartmentData?.Price"
-                     class="apartment-card-detail"
-                  >
-                     <span class="detail-label">PRICE</span>
-                     <span class="detail-value">{{ formattedPrice }}</span>
-                  </div>
-
-                  <!-- BEDROOM COUNT -->
-                  <div
-                     v-if="apartmentData?.Bedroom"
-                     class="apartment-card-detail"
-                  >
-                     <span class="detail-label">BEDROOM COUNT</span>
-                     <span class="detail-value">{{
-                        apartmentData.Bedroom
-                     }}</span>
-                  </div>
-
-                  <!-- BATHROOM COUNT -->
-                  <div
-                     v-if="apartmentData?.Bathroom"
-                     class="apartment-card-detail"
-                  >
-                     <span class="detail-label">BATHROOM COUNT</span>
-                     <span class="detail-value">{{
-                        apartmentData.Bathroom
-                     }}</span>
-                  </div>
-
-                  <!-- ORIENTATION -->
-                  <div
-                     v-if="orientations.length > 0"
-                     class="apartment-card-detail"
-                  >
-                     <span class="detail-label">ORIENTATION</span>
-                     <span class="detail-value">{{
-                        orientations.join(", ")
-                     }}</span>
-                  </div>
-
-                  <!-- AVAILABILITY STATUS -->
-                  <div v-if="availabilityStatus" class="apartment-card-detail">
-                     <span class="detail-label">STATUS</span>
-                     <span
-                        class="detail-value"
-                        :class="getStatusClass(availabilityStatus)"
+                  <div class="apartment-card-details">
+                     <div
+                        v-if="apartmentData?.Surface"
+                        class="apartment-card-detail"
                      >
-                        {{ availabilityStatus }}
-                     </span>
-                  </div>
-               </div>
+                        <span class="detail-label">SURFACE</span>
+                        <span class="detail-value">{{ formattedSurface }}</span>
+                     </div>
 
-               <!-- Кнопка First Person View -->
-               <div class="first-person-view-btn-container">
-                  <button
-                     class="first-person-view-btn"
-                     @click="handleFirstPersonView"
-                  >
-                     First Person View
-                  </button>
+                     <div
+                        v-if="apartmentData?.Price"
+                        class="apartment-card-detail"
+                     >
+                        <span class="detail-label">PRICE</span>
+                        <span class="detail-value">{{ formattedPrice }}</span>
+                     </div>
+
+                     <div
+                        v-if="apartmentData?.Bedroom"
+                        class="apartment-card-detail"
+                     >
+                        <span class="detail-label">BEDROOM COUNT</span>
+                        <span class="detail-value">{{
+                           apartmentData.Bedroom
+                        }}</span>
+                     </div>
+
+                     <div
+                        v-if="apartmentData?.Bathroom"
+                        class="apartment-card-detail"
+                     >
+                        <span class="detail-label">BATHROOM COUNT</span>
+                        <span class="detail-value">{{
+                           apartmentData.Bathroom
+                        }}</span>
+                     </div>
+
+                     <div
+                        v-if="orientations.length > 0"
+                        class="apartment-card-detail"
+                     >
+                        <span class="detail-label">ORIENTATION</span>
+                        <span class="detail-value">{{
+                           orientations.join(", ")
+                        }}</span>
+                     </div>
+
+                     <div
+                        v-if="availabilityStatus"
+                        class="apartment-card-detail"
+                     >
+                        <span class="detail-label">STATUS</span>
+                        <span
+                           class="detail-value"
+                           :class="getStatusClass(availabilityStatus)"
+                        >
+                           {{ availabilityStatus }}
+                        </span>
+                     </div>
+                  </div>
+
+                  <div class="first-person-view-btn-container">
+                     <button
+                        class="first-person-view-btn"
+                        @click="handleFirstPersonView"
+                     >
+                        First Person View
+                     </button>
+                  </div>
                </div>
             </div>
          </div>
@@ -196,9 +202,18 @@ const props = defineProps({
       type: String,
       default: "/apartments/plans/", // Базовый путь к изображениям планировок
    },
+   isCollapsed: {
+      type: Boolean,
+      default: false,
+   },
 });
 
-const emit = defineEmits(["close", "apartments"]);
+const emit = defineEmits(["close", "apartments", "toggleCollapse"]);
+
+// Обработчик клика по кнопке сворачивания
+const toggleCollapse = () => {
+   emit("toggleCollapse");
+};
 
 // Получение URL изображения по ID или напрямую
 const imageUrl = computed(() => {
@@ -307,6 +322,11 @@ const handleFirstPersonView = () => {
    display: flex;
    flex-direction: column;
    max-height: 90vh;
+
+   @media (max-width: 1549px) {
+      transition: transform 0.4s ease-in-out;
+      transform: translateX(0);
+   }
 }
 
 .apartment-card-close {
@@ -330,6 +350,41 @@ const handleFirstPersonView = () => {
 
 .apartment-card-close:hover {
    opacity: 0.8;
+}
+
+.apartment-card-collapse {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: block;
+      position: absolute;
+      top: 40px;
+      right: 5px;
+      width: 30px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 100;
+      user-select: none;
+   }
+}
+
+.apartment-card-collapse:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
+   }
+}
+
+/* Свернутое состояние карточки */
+.apartment-card-overlay.collapsed .apartment-card {
+   @media (max-width: 1549px) {
+      transform: translateX(calc(100% - 60px));
+   }
 }
 
 .apartment-card-image-container {

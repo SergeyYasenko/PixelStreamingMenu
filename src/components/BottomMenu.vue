@@ -70,15 +70,17 @@
          </div>
       </div>
       <div class="bottom-menu-bottom-mobile">
-         <div
-            class="bottom-menu-item"
-            @click="handleItemClick({ name: 'Home' })"
-         >
-            <img
-               src="../assets/icons/bottomMenu/home.png"
-               alt="Home"
-               class="bottom-menu-icon"
-            />
+         <div class="bottom-menu-item">
+            <div
+               class="bottom-menu-item-icon"
+               @click="handleItemClick({ name: 'Home' })"
+            >
+               <img
+                  src="../assets/icons/bottomMenu/home.png"
+                  alt="Home"
+                  class="bottom-menu-icon"
+               />
+            </div>
          </div>
          <div class="bottom-menu-company" @click="handleGoodiniClick">
             GOODINI
@@ -122,46 +124,46 @@ const menuItems = computed(() => [
       id: 1,
       name: "Home",
       icon: "src/assets/icons/bottomMenu/home.png",
-      showText: false, // Скрыть текст для кнопки Home
+      showText: false,
    },
    {
       id: 2,
-      name: "Скрыть",
+      name: "Hide",
       icon: "src/assets/icons/bottomMenu/hide.png",
    },
    {
       id: 3,
-      name: "Погода и время",
+      name: "Weather|time and date",
       icon: "src/assets/icons/bottomMenu/weather-and-time.png",
    },
-   {
-      id: 4,
-      name: "Сезон",
-      icon: "src/assets/icons/bottomMenu/season.png",
-   },
+   // {
+   //    id: 4,
+   //    name: "Сезон",
+   //    icon: "src/assets/icons/bottomMenu/season.png",
+   // },
    {
       id: 5,
-      name: "Внутренний двор",
+      name: "Environment",
       icon: "src/assets/icons/bottomMenu/inner-court.png",
    },
-   {
-      id: 6,
-      name: "Инфраструктура",
-      icon: "src/assets/icons/bottomMenu/infrastructure.png",
-      disabled: !isHoloModeActive.value, // Активна только в Holo mode
-   },
-   {
-      id: 7,
-      name: "Квартиры",
-      icon: "src/assets/icons/bottomMenu/infrastructure.png",
-   },
-   {
-      id: 8,
-      name: "Курсор",
-      icon: "src/assets/icons/bottomMenu/cursor.png",
-      width: "44px",
-      height: "44px",
-   },
+   // {
+   //    id: 6,
+   //    name: "Инфраструктура",
+   //    icon: "src/assets/icons/bottomMenu/infrastructure.png",
+   //    disabled: !isHoloModeActive.value, // Активна только в Holo mode
+   // },
+   // {
+   //    id: 7,
+   //    name: "Квартиры",
+   //    icon: "src/assets/icons/bottomMenu/infrastructure.png",
+   // },
+   // {
+   //    id: 8,
+   //    name: "Курсор",
+   //    icon: "src/assets/icons/bottomMenu/cursor.png",
+   //    width: "44px",
+   //    height: "44px",
+   // },
    {
       id: 9,
       name: "Next mode",
@@ -191,17 +193,17 @@ const handleItemClick = (item) => {
 
    if (item.name === "Home") {
       emit("sendToEngine", { home: "" });
-   } else if (item.name === "Скрыть") {
+   } else if (item.name === "Hide") {
       emit("hide");
       emit("sendToEngine", { hide: "" });
-   } else if (item.name === "Погода и время") {
+   } else if (item.name === "Weather|time and date") {
       emit("showWeatherTime");
    } else if (item.name === "Сезон") {
       emit("sendToEngine", { season: "" });
    } else if (item.name === "Инфраструктура") {
       emit("showDataBlocks", "infrastructure");
       emit("sendToEngine", { infrastructure: "" });
-   } else if (item.name === "Внутренний двор") {
+   } else if (item.name === "Environment") {
       emit("showDataBlocks", "courtyard");
       emit("sendToEngine", { courtyard: "" });
    } else if (item.name === "Квартиры") {
