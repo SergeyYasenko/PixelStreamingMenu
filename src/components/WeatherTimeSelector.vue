@@ -53,7 +53,7 @@
                      </div>
                   </div>
                </div>
-               <div class="time-slider-container">
+               <!-- <div class="time-slider-container">
                   <input
                      type="range"
                      min="0"
@@ -68,11 +68,11 @@
                         :style="{ left: timeSliderPosition + '%' }"
                      ></div>
                   </div>
-               </div>
+               </div> -->
             </div>
 
             <!-- DATE Section -->
-            <div class="section">
+            <!-- <div class="section">
                <div class="section-title-wrapper">
                   <div class="section-title-line-left"></div>
                   <div class="section-title">DATE</div>
@@ -137,10 +137,10 @@
                      </div>
                   </div>
                </div>
-            </div>
+            </div> -->
 
             <!-- LOCATION Section -->
-            <div class="section">
+            <!-- <div class="section">
                <div class="section-title-wrapper">
                   <div class="section-title-line-left"></div>
                   <div class="section-title">LOCATION</div>
@@ -211,10 +211,10 @@
                      />
                   </div>
                </div>
-            </div>
+            </div> -->
 
             <!-- WEATHER Section -->
-            <div class="section">
+            <!-- <div class="section">
                <div class="section-title-wrapper">
                   <div class="section-title-line-left"></div>
                   <div class="section-title">WEATHER</div>
@@ -270,7 +270,7 @@
                      </div>
                   </div>
                </div>
-            </div>
+            </div> -->
          </div>
       </div>
    </div>
@@ -664,7 +664,7 @@ onMounted(() => {
    @media (max-width: 1549px) {
       position: relative;
       display: flex;
-      align-items: flex-end;
+      align-items: flex-start;
       gap: 10px;
       transition: transform 0.4s ease-in-out;
       transform: translateX(0);

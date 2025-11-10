@@ -131,11 +131,11 @@ const menuItems = computed(() => [
       name: "Hide",
       icon: "src/assets/icons/bottomMenu/hide.png",
    },
-   // {
-   //    id: 3,
-   //    name: "Weather|time and date",
-   //    icon: "src/assets/icons/bottomMenu/weather-and-time.png",
-   // },
+   {
+      id: 3,
+      name: "Time",
+      icon: "src/assets/icons/bottomMenu/time.png",
+   },
    // {
    //    id: 4,
    //    name: "Сезон",
@@ -196,7 +196,7 @@ const handleItemClick = (item) => {
    } else if (item.name === "Hide") {
       emit("hide");
       emit("sendToEngine", { hide: "" });
-   } else if (item.name === "Weather|time and date") {
+   } else if (item.name === "Time") {
       emit("showWeatherTime");
    } else if (item.name === "Сезон") {
       emit("sendToEngine", { season: "" });
