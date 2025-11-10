@@ -146,12 +146,11 @@ const menuItems = computed(() => [
       name: "Environment",
       icon: "src/assets/icons/bottomMenu/inner-court.png",
    },
-   // {
-   //    id: 6,
-   //    name: "Инфраструктура",
-   //    icon: "src/assets/icons/bottomMenu/infrastructure.png",
-   //    disabled: !isHoloModeActive.value, // Активна только в Holo mode
-   // },
+   {
+      id: 6,
+      name: "Инфраструктура",
+      icon: "src/assets/icons/bottomMenu/infrastructure.png",
+   },
    // {
    //    id: 7,
    //    name: "Квартиры",
