@@ -312,6 +312,7 @@ const currentHour = ref(15);
 const currentMinute = ref(0);
 const timeOnly = ref("3:00");
 const ampmIndex = ref(1);
+const isArrowClick = ref(false); // Флаг для отслеживания клика по стрелкам
 
 // Date state
 const currentMonth = ref("OCTOBER");
@@ -422,13 +423,27 @@ const weatherOptions = [
 
 // Time methods
 const increaseTime = () => {
+   isArrowClick.value = true; // Устанавливаем флаг перед изменением
    currentHour.value = (currentHour.value + 1) % 24;
    updateTimeDisplay();
+   // Отправка команды на увеличение часа
+   sendSingleWeatherField("ahour", " ahour");
+   // Сбрасываем флаг после небольшой задержки
+   setTimeout(() => {
+      isArrowClick.value = false;
+   }, 50);
 };
 
 const decreaseTime = () => {
+   isArrowClick.value = true; // Устанавливаем флаг перед изменением
    currentHour.value = currentHour.value === 0 ? 23 : currentHour.value - 1;
    updateTimeDisplay();
+   // Отправка команды на уменьшение часа
+   sendSingleWeatherField("shour", " shour");
+   // Сбрасываем флаг после небольшой задержки
+   setTimeout(() => {
+      isArrowClick.value = false;
+   }, 50);
 };
 
 const updateTimeDisplay = () => {
@@ -598,12 +613,11 @@ const sendSingleWeatherField = (key, value) => {
 
 // Watch each field separately and send changes
 watch([currentHour, currentMinute], () => {
+   // Не отправляем время, если изменение произошло через клик по стрелкам
+   if (isArrowClick.value) return;
+
    const timeValue = currentHour.value + currentMinute.value / 60;
    sendSingleWeatherField("time", Math.floor(timeValue * 100));
-});
-
-watch(ampmIndex, (newValue) => {
-   sendSingleWeatherField("ampm", String(newValue));
 });
 
 watch(currentMonth, (newValue) => {
@@ -645,7 +659,6 @@ watch(timeZone, (newValue) => {
 onMounted(() => {
    const timeValue = currentHour.value + currentMinute.value / 60;
    sendSingleWeatherField("time", Math.floor(timeValue * 100));
-   sendSingleWeatherField("ampm", String(ampmIndex.value));
    sendSingleWeatherField(
       "monthchange",
       String(months.indexOf(currentMonth.value))
