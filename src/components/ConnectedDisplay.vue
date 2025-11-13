@@ -2,18 +2,39 @@
    <div class="connected-display">
       <div class="hous-wrapper">
          <div class="house-body">
-            <CorpSelector
-               :corps="corps"
-               :selectedCorp="selectedCorp"
-               @selectCorp="selectCorp"
-            />
-            <FloorSelector
-               :floors="floors"
-               :selectedCorp="selectedCorp"
-               :selectedFloor="selectedFloor"
-               :showFloors="showFloors"
-               @selectFloor="selectFloor"
-               @hideFloors="hideFloors"
+            <div
+               class="left-menu-wrapper"
+               :class="{ collapsed: menusCollapsed.leftMenu }"
+            >
+               <button
+                  class="left-menu-toggle-btn"
+                  @click="toggleMenuCollapse('leftMenu')"
+               >
+                  {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
+               </button>
+               <div class="left-menu-inner">
+                  <CorpSelector
+                     :corps="corps"
+                     :selectedCorp="selectedCorp"
+                     @selectCorp="selectCorp"
+                  />
+                  <FloorSelector
+                     :floors="floors"
+                     :selectedCorp="selectedCorp"
+                     :selectedCorpName="selectedCorpName"
+                     :selectedFloor="selectedFloor"
+                     :showFloors="showFloors"
+                     @selectFloor="selectFloor"
+                     @hideFloors="hideFloors"
+                  />
+               </div>
+            </div>
+            <WeatherTimeSelector
+               v-show="showWeatherTime"
+               :is-collapsed="menusCollapsed.weather"
+               @close="hideWeatherTimeSelector"
+               @sendToEngine="handleSendToEngine"
+               @toggleCollapse="toggleMenuCollapse('weather')"
             />
          </div>
          <DisplayPositioning
@@ -92,13 +113,6 @@
             "
             @sendToEngine="handleSendToEngine"
             @toggleCollapse="toggleMenuCollapse('apartment')"
-         />
-         <WeatherTimeSelector
-            v-show="showWeatherTime"
-            :is-collapsed="menusCollapsed.weather"
-            @close="hideWeatherTimeSelector"
-            @sendToEngine="handleSendToEngine"
-            @toggleCollapse="toggleMenuCollapse('weather')"
          />
          <DataBlocksSelector
             v-if="showDataBlocks"
@@ -192,13 +206,13 @@ watch(
 );
 
 // Состояния для верхнего левого меню
-const selectedCorp = ref(null);
+const selectedCorp = ref(1); // Корпус 1 выбран по умолчанию
 const selectedFloor = ref(13);
-const showFloors = ref(false);
+const showFloors = ref(true); // Открыт, так как корпус выбран по умолчанию
 
 // Состояния для нижнего меню
 const showApartmentSelector = ref(false);
-const showWeatherTime = ref(false);
+const showWeatherTime = ref(true); // Открыт по умолчанию
 const showDataBlocks = ref(false);
 const dataBlocksType = ref("infrastructure");
 const apartmentSelectedCorp = ref(null);
@@ -213,6 +227,7 @@ const menusCollapsed = ref({
    weather: false,
    datablocks: false,
    apartmentCard: false,
+   leftMenu: false,
 });
 
 // Проверка открытых и развернутых меню для управления z-index камеры
@@ -261,9 +276,9 @@ const toggleMenuCollapse = (menuName) => {
 };
 
 const corps = ref([
-   { id: 1, name: "The Royal Yacht Hotel", floorsCount: 16 },
-   { id: 2, name: "MAGNOLIA HOTEL APARTMENTS", floorsCount: 22 },
-   { id: 3, name: "CORALIS", floorsCount: 16 },
+   { id: 1, name: "The Royal Yacht", floorsCount: 6 },
+   { id: 2, name: "MAGNOLIA HOTEL", floorsCount: 6 },
+   { id: 3, name: "CORALIS RESIDENCES", floorsCount: 6 },
 ]);
 
 const floors = computed(() => {
@@ -279,14 +294,21 @@ const floors = computed(() => {
    return floorsArray;
 });
 
+const selectedCorpName = computed(() => {
+   const selectedCorpData = corps.value.find(
+      (corp) => corp.id === selectedCorp.value
+   );
+   return selectedCorpData ? selectedCorpData.name : "";
+});
+
 // Методы для верхнего левого меню
 const selectCorp = (corpId) => {
    selectedCorp.value = corpId;
    selectedFloor.value = null;
-   // showFloors.value = true; // ЗАКОММЕНТИРОВАНО: не показываем этажи
+   showFloors.value = true;
 
    // Закрываем другие компоненты над нижним меню
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    showDataBlocks.value = false;
 
    apartmentSelectedFloor.value = 13;
@@ -313,13 +335,13 @@ const selectFloor = (floorId) => {
 };
 
 const hideFloors = () => {
-   showFloors.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
 };
 
 // Методы для нижнего меню
 const handleApartmentCorpSelect = (corpId) => {
    // Закрываем другие компоненты над нижним меню
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    // Выбираем корпус только в ApartmentSelector
    apartmentSelectedCorp.value = corpId;
    apartmentSelectedFloor.value = 13;
@@ -342,9 +364,9 @@ const handleApartmentFloorSelect = (floorId) => {
 // Метод для скрытия всех меню и сброса значений
 const hideAllMenus = () => {
    // Скрываем меню
-   showFloors.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
    hideApartmentSelector();
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    showDataBlocks.value = false;
 
    // Закрываем карточку квартиры
@@ -352,7 +374,7 @@ const hideAllMenus = () => {
 
    // Сбрасываем значения на дефолтные независимо
    // Верхний CorpSelector
-   selectedCorp.value = null;
+   selectedCorp.value = 1; // Корпус 1 по умолчанию
    selectedFloor.value = 13;
 
    // Нижний ApartmentSelector
@@ -365,7 +387,7 @@ const hideAllMenus = () => {
 
 const showWeatherTimeSelector = () => {
    // Закрываем другие компоненты над нижним меню
-   showFloors.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
    hideApartmentSelector();
    showDataBlocks.value = false;
    // Закрываем карточку квартиры
@@ -375,7 +397,7 @@ const showWeatherTimeSelector = () => {
 };
 
 const hideWeatherTimeSelector = () => {
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    // НЕ сбрасываем menusCollapsed.value.weather - сохраняем состояние
 };
 
@@ -386,9 +408,9 @@ const hideApartmentSelector = () => {
 
 const showDataBlocksSelector = (type) => {
    // Закрываем другие компоненты над нижним меню
-   showFloors.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
    hideApartmentSelector();
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
    // Скрываем крестик при открытии data blocks
@@ -432,9 +454,9 @@ const handleToggleHoloMode = ({ wasActive, isNowActive }) => {
 
 const showGoodiniSettingsSelector = () => {
    // Закрываем другие компоненты над нижним меню
-   showFloors.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
    hideApartmentSelector();
-   showWeatherTime.value = false;
+   // showWeatherTime.value = false; // Погода всегда открыта
    showDataBlocks.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
@@ -442,8 +464,8 @@ const showGoodiniSettingsSelector = () => {
 
 const showApartmentsSelector = () => {
    // Закрываем другие компоненты над нижним меню
-   showFloors.value = false;
-   showWeatherTime.value = false;
+   // showFloors.value = false; // Этажи всегда открыты
+   // showWeatherTime.value = false; // Погода всегда открыта
    showDataBlocks.value = false;
    // Закрываем карточку квартиры
    handleCloseApartmentCard();
@@ -541,6 +563,61 @@ const handleExitCross = () => {
    @media (max-width: 1549px) {
       display: flex;
       gap: 15px;
+   }
+}
+
+/* Left menu wrapper для мобильной версии */
+.left-menu-wrapper {
+   @media (max-width: 1549px) {
+      display: flex;
+      align-items: flex-start;
+      transition: transform 0.4s ease-in-out;
+      transform: translateX(0);
+   }
+}
+
+.left-menu-wrapper.collapsed {
+   @media (max-width: 1549px) {
+      transform: translateX(
+         calc(-100% + 40px)
+      ); /* Уезжает влево, оставляя только кнопку */
+   }
+}
+
+.left-menu-toggle-btn {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: block;
+      position: sticky;
+      top: 0;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 1.2rem;
+      width: 40px;
+      height: 40px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 50;
+      user-select: none;
+      flex-shrink: 0;
+      order: 2; /* Кнопка справа от контента */
+   }
+}
+
+.left-menu-toggle-btn:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
+   }
+}
+
+.left-menu-inner {
+   @media (max-width: 1549px) {
+      display: flex;
+      flex-direction: column;
+      order: 1; /* Контент слева от кнопки */
    }
 }
 

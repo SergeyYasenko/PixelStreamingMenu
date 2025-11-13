@@ -7,6 +7,9 @@
             alt="logo"
          />
          <div class="house-body-logo-title">PALLADIUM</div>
+         <div class="house-body-logo-text">
+            prime real estate development L . L . C .
+         </div>
       </div>
       <div class="house-body-top-title">Select residence</div>
       <div class="house-body-top-num-wrapper">
@@ -78,7 +81,6 @@ const corpRows = computed(() => {
    display: flex;
    align-items: center;
    flex-direction: column;
-   margin-bottom: 5px;
    background-color: rgba(34, 34, 34, 0.5);
 }
 
@@ -100,9 +102,21 @@ const corpRows = computed(() => {
 }
 
 .house-body-logo-title {
-   font-size: 2rem;
-   letter-spacing: 3px;
+   font-size: 2.5rem;
+   letter-spacing: 5px;
    user-select: none;
+   @media (max-width: 1549px) {
+      font-size: 2rem;
+      letter-spacing: 3px;
+   }
+}
+
+.house-body-logo-text {
+   font-size: 0.75rem;
+   user-select: none;
+   @media (max-width: 1549px) {
+      font-size: 0.625rem;
+   }
 }
 
 .house-body-top-title {
@@ -112,6 +126,7 @@ const corpRows = computed(() => {
    letter-spacing: 2px;
    border-bottom: 1px solid #fff;
    user-select: none;
+   background-color: rgba(0, 27, 73, 0.5);
 }
 
 .house-body-top-num-wrapper {
@@ -140,7 +155,6 @@ const corpRows = computed(() => {
    flex: 1 1 auto;
    border: 1px solid transparent;
    transition: all 0.3s ease;
-   border-radius: 4px;
    user-select: none;
 }
 
@@ -158,6 +172,9 @@ const corpRows = computed(() => {
    padding: 0 15px;
    text-align: left;
    border-bottom: 1px solid #fff;
+   @media (max-width: 1549px) {
+      font-size: 1rem;
+   }
 }
 
 .house-body-top-num-name:last-child {
@@ -171,7 +188,7 @@ const corpRows = computed(() => {
 }
 
 .house-body-top-num.selected {
-   background-color: rgba(134, 2, 2, 0.8);
+   background-color: rgba(134, 2, 2, 0.5);
    border-right: 1px solid #fff;
    border-left: 1px solid #fff;
 }

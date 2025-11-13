@@ -1,11 +1,8 @@
 <template>
    <div class="house-body-bottom" v-if="showFloors">
-      <div class="house-body-bottom-title-wrapper">
-         <div class="house-body-bottom-title">КОРПУС {{ selectedCorp }}</div>
-      </div>
-      <div class="house-body-bottom-wrapper">
-         <div class="house-body-bottom-text-wrapper">
-            <div class="house-body-bottom-text">Выберите этаж</div>
+      <div class="house-body-bottom-wrapper" :class="corpColorClass">
+         <div class="house-body-bottom-text-wrapper" :class="corpColorClass">
+            <div class="house-body-bottom-text">SELECT FLOOR</div>
          </div>
          <div class="house-body-bottom-num-wrapper">
             <div
@@ -24,10 +21,8 @@
                </div>
             </div>
          </div>
-         <div class="house-body-bottom-arrow-wrapper">
-            <div class="house-body-bottom-arrow" @click="handleArrowClick">
-               <img src="../assets/icons/arrow.png" alt="arrow-left" />
-            </div>
+         <div class="house-body-name-wrapper" :class="corpColorClass">
+            <div class="house-body-name-text">{{ selectedCorpName }}</div>
          </div>
       </div>
    </div>
@@ -44,6 +39,10 @@ const props = defineProps({
    selectedCorp: {
       type: Number,
       default: null,
+   },
+   selectedCorpName: {
+      type: String,
+      default: "",
    },
    selectedFloor: {
       type: Number,
@@ -63,11 +62,19 @@ const handleArrowClick = () => {
 
 // Вычисляемое свойство для разбиения этажей на строки по 3 элемента
 const floorRows = computed(() => {
+   // Добавляем кнопку ALL в конец массива этажей
+   const floorsWithAll = [...props.floors, { id: "all", num: "ALL" }];
+
    const rows = [];
-   for (let i = 0; i < props.floors.length; i += 3) {
-      rows.push(props.floors.slice(i, i + 3));
+   for (let i = 0; i < floorsWithAll.length; i += 3) {
+      rows.push(floorsWithAll.slice(i, i + 3));
    }
    return rows;
+});
+
+// Вычисляемое свойство для динамического класса цвета корпуса
+const corpColorClass = computed(() => {
+   return `corp-color-${props.selectedCorp}`;
 });
 </script>
 
@@ -78,20 +85,6 @@ const floorRows = computed(() => {
    display: flex;
    flex-direction: column;
    align-items: center;
-   background-color: rgba(34, 34, 34, 0.5);
-}
-
-.house-body-bottom-title-wrapper {
-   width: 100%;
-   text-align: center;
-   padding: 5px 0px;
-   border-bottom: 1px solid #fff;
-}
-
-.house-body-bottom-title {
-   font-size: 1.125rem;
-   letter-spacing: 2px;
-   user-select: none;
 }
 
 .house-body-bottom-text-wrapper {
@@ -99,6 +92,20 @@ const floorRows = computed(() => {
    text-align: center;
    padding: 5px 0px;
    border-bottom: 1px solid #fff;
+   transition: background-color 0.3s ease;
+}
+
+/* Цвета заголовка для каждого корпуса */
+.house-body-bottom-text-wrapper.corp-color-1 {
+   background-color: rgba(73, 29, 0, 0.7); /* Коричневый темнее для корпуса 1 */
+}
+
+.house-body-bottom-text-wrapper.corp-color-2 {
+   background-color: rgba(134, 2, 2, 0.7); /* Зеленый темнее для корпуса 2 */
+}
+
+.house-body-bottom-text-wrapper.corp-color-3 {
+   background-color: rgba(0, 27, 73, 0.7); /* Синий темнее для корпуса 3 */
 }
 
 .house-body-bottom-text {
@@ -109,15 +116,28 @@ const floorRows = computed(() => {
 
 .house-body-bottom-wrapper {
    width: 100%;
-   height: 300px;
    overflow-y: auto;
    display: flex;
    flex-direction: column;
    align-items: space-between;
+   transition: background-color 0.3s ease;
 
-   @media (max-width: 1549px) {
+   /* @media (max-width: 1549px) {
       height: 200px;
-   }
+   } */
+}
+
+/* Цвета для каждого корпуса */
+.house-body-bottom-wrapper.corp-color-1 {
+   background-color: rgba(73, 29, 0, 0.5); /* Коричневый для корпуса 1 */
+}
+
+.house-body-bottom-wrapper.corp-color-2 {
+   background-color: rgba(134, 2, 2, 0.5); /* Зеленый для корпуса 2 */
+}
+
+.house-body-bottom-wrapper.corp-color-3 {
+   background-color: rgba(0, 27, 73, 0.5); /* Синий для корпуса 3 */
 }
 
 .house-body-bottom-num-wrapper {
@@ -131,6 +151,10 @@ const floorRows = computed(() => {
    display: flex;
    justify-content: space-between;
    border-bottom: 1px solid #fff;
+}
+
+.house-body-bottom-num-row:last-child {
+   border-bottom: none;
 }
 
 .house-body-bottom-num {
@@ -150,7 +174,7 @@ const floorRows = computed(() => {
 }
 
 .house-body-bottom-num.selected {
-   background-color: rgba(134, 2, 2, 0.8);
+   background-color: rgba(134, 2, 2, 0.5);
    border: 1px solid #fff;
 }
 
@@ -176,5 +200,34 @@ const floorRows = computed(() => {
 .house-body-bottom-arrow:hover img {
    opacity: 0.5;
    transition: all 0.3s ease;
+}
+
+.house-body-name-wrapper {
+   width: 100%;
+   text-align: center;
+   padding: 10px 15px;
+   border-top: 1px solid #fff;
+   margin-top: auto;
+   transition: background-color 0.3s ease;
+}
+
+/* Цвета названия корпуса */
+.house-body-name-wrapper.corp-color-1 {
+   background-color: rgba(73, 29, 0, 0.7); /* Коричневый темнее для корпуса 1 */
+}
+
+.house-body-name-wrapper.corp-color-2 {
+   background-color: rgba(134, 2, 2, 0.7); /* Зеленый темнее для корпуса 2 */
+}
+
+.house-body-name-wrapper.corp-color-3 {
+   background-color: rgba(0, 27, 73, 0.7); /* Синий темнее для корпуса 3 */
+}
+
+.house-body-name-text {
+   font-size: 1rem;
+   letter-spacing: 1px;
+   color: #fff;
+   user-select: none;
 }
 </style>

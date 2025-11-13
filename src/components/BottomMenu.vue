@@ -131,11 +131,11 @@ const menuItems = computed(() => [
       name: "Hide",
       icon: "src/assets/icons/bottomMenu/hide.png",
    },
-   {
-      id: 3,
-      name: "Time",
-      icon: "src/assets/icons/bottomMenu/time.png",
-   },
+   // {
+   //    id: 3,
+   //    name: "Time",
+   //    icon: "src/assets/icons/bottomMenu/time.png",
+   // },
    // {
    //    id: 4,
    //    name: "Сезон",

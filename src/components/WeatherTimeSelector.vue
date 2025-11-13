@@ -7,72 +7,69 @@
          <button class="collapse-toggle-btn" @click="toggleCollapse">
             {{ props.isCollapsed ? "◀" : "▶" }}
          </button>
-         <div class="weather-time-content">
-            <div class="section">
-               <div class="section-title-wrapper">
-                  <div class="section-title-line-left"></div>
-                  <div class="section-title">TIME</div>
-                  <div class="section-title-line-right"></div>
-               </div>
-               <div class="time-display">
-                  <div class="time-value">{{ currentTime }}</div>
-                  <div class="time-controls">
-                     <div class="time-arrow left" @click="decreaseTime">
-                        <svg
-                           width="12"
-                           height="12"
-                           viewBox="0 0 12 12"
-                           fill="currentColor"
-                        >
-                           <path
-                              d="M7.5 3L4.5 6L7.5 9"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              fill="none"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                           />
-                        </svg>
+         <div class="weather-time-inner">
+            <div class="weather-time-content-title">Weather | Time of day</div>
+            <div class="weather-time-content">
+               <div class="section">
+                  <div class="time-display">
+                     <div class="time-value">{{ currentTime }}</div>
+                     <div class="time-controls">
+                        <div class="time-arrow left" @click="decreaseTime">
+                           <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="currentColor"
+                           >
+                              <path
+                                 d="M7.5 3L4.5 6L7.5 9"
+                                 stroke="currentColor"
+                                 stroke-width="1.5"
+                                 fill="none"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                              />
+                           </svg>
+                        </div>
+                        <div class="time-arrow right" @click="increaseTime">
+                           <svg
+                              width="12"
+                              height="12"
+                              viewBox="0 0 12 12"
+                              fill="currentColor"
+                           >
+                              <path
+                                 d="M4.5 3L7.5 6L4.5 9"
+                                 stroke="currentColor"
+                                 stroke-width="1.5"
+                                 fill="none"
+                                 stroke-linecap="round"
+                                 stroke-linejoin="round"
+                              />
+                           </svg>
+                        </div>
                      </div>
-                     <div class="time-arrow right" @click="increaseTime">
-                        <svg
-                           width="12"
-                           height="12"
-                           viewBox="0 0 12 12"
-                           fill="currentColor"
-                        >
-                           <path
-                              d="M4.5 3L7.5 6L4.5 9"
-                              stroke="currentColor"
-                              stroke-width="1.5"
-                              fill="none"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                           />
-                        </svg>
+                  </div>
+                  <div class="time-slider-container">
+                     <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        :value="timeSliderPosition"
+                        @input="handleSliderChange"
+                        class="time-slider-input"
+                     />
+                     <div class="time-slider-track">
+                        <div
+                           class="time-slider-handle"
+                           :style="{ left: timeSliderPosition + '%' }"
+                        ></div>
                      </div>
                   </div>
                </div>
-               <!-- <div class="time-slider-container">
-                  <input
-                     type="range"
-                     min="0"
-                     max="100"
-                     :value="timeSliderPosition"
-                     @input="handleSliderChange"
-                     class="time-slider-input"
-                  />
-                  <div class="time-slider-track">
-                     <div
-                        class="time-slider-handle"
-                        :style="{ left: timeSliderPosition + '%' }"
-                     ></div>
-                  </div>
-               </div> -->
-            </div>
 
-            <!-- DATE Section -->
-            <!-- <div class="section">
+               <!-- DATE Section -->
+               <!-- <div class="section">
                <div class="section-title-wrapper">
                   <div class="section-title-line-left"></div>
                   <div class="section-title">DATE</div>
@@ -139,8 +136,8 @@
                </div>
             </div> -->
 
-            <!-- LOCATION Section -->
-            <!-- <div class="section">
+               <!-- LOCATION Section -->
+               <!-- <div class="section">
                <div class="section-title-wrapper">
                   <div class="section-title-line-left"></div>
                   <div class="section-title">LOCATION</div>
@@ -213,13 +210,8 @@
                </div>
             </div> -->
 
-            <!-- WEATHER Section -->
-            <!-- <div class="section">
-               <div class="section-title-wrapper">
-                  <div class="section-title-line-left"></div>
-                  <div class="section-title">WEATHER</div>
-                  <div class="section-title-line-right"></div>
-               </div>
+               <!-- WEATHER Section -->
+               <!-- <div class="section">
                <div class="weather-display-container">
                   <div
                      class="weather-display"
@@ -271,6 +263,26 @@
                   </div>
                </div>
             </div> -->
+
+               <!-- SEASON Section -->
+               <div class="section">
+                  <div class="season-buttons">
+                     <button
+                        v-for="season in seasons"
+                        :key="season.id"
+                        class="season-button"
+                        :class="{ active: currentSeason === season.id }"
+                        @click="selectSeason(season)"
+                     >
+                        <img
+                           :src="season.image"
+                           alt="season"
+                           class="weather-icon"
+                        />
+                     </button>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
    </div>
@@ -323,6 +335,15 @@ const dragStartValue = ref(0);
 // Weather state
 const currentWeather = ref("CLEAR SKIES");
 const showWeatherDropdown = ref(false);
+
+// Season state
+const currentSeason = ref(1);
+const seasons = [
+   { id: 1, image: "/src/assets/icons/weather/Clear_Skies.png" },
+   { id: 2, image: "/src/assets/icons/weather/Cloudy.png" },
+   { id: 3, image: "/src/assets/icons/weather/Foggy.png" },
+   { id: 4, image: "/src/assets/icons/weather/Rain.png" },
+];
 
 // Available options
 const months = [
@@ -467,6 +488,11 @@ const getCurrentWeatherImage = () => {
       : "/src/assets/icons/weather/weather-plug.png";
 };
 
+// Season methods
+const selectSeason = (season) => {
+   currentSeason.value = season.id;
+};
+
 // Drag methods
 const startDrag = (type, event) => {
    // Only start drag if it's not a text selection
@@ -606,6 +632,11 @@ watch(currentWeather, (newValue) => {
    sendSingleWeatherField("weathertype", String(index));
 });
 
+watch(currentSeason, (newValue) => {
+   const index = seasons.findIndex((s) => s.id === newValue);
+   sendSingleWeatherField("season", String(index));
+});
+
 watch(timeZone, (newValue) => {
    sendSingleWeatherField("timezone", newValue);
 });
@@ -627,22 +658,22 @@ onMounted(() => {
       "weathertype",
       String(weatherOptions.findIndex((w) => w.name === currentWeather.value))
    );
+   sendSingleWeatherField(
+      "season",
+      String(seasons.findIndex((s) => s.id === currentSeason.value))
+   );
    sendSingleWeatherField("timezone", timeZone.value);
 });
 </script>
 
 <style scoped>
 .weather-time-selector {
-   position: absolute;
-   bottom: 100%;
-   left: 30px;
-   width: 300px;
+   position: relative;
+   width: 100%;
    background-color: rgba(34, 34, 34, 0.5);
-   border-radius: 8px;
-   padding: 0 20px;
-   z-index: 10000;
    pointer-events: auto;
-   margin-bottom: 5px;
+   border-top: 1px solid #fff;
+   padding-bottom: 15px;
 
    @media (max-width: 1549px) {
       position: fixed;
@@ -651,12 +682,15 @@ onMounted(() => {
       bottom: auto;
       left: auto;
       width: auto;
-      height: auto;
+      height: calc(100vh - 130px);
+      display: flex;
+      align-items: flex-end;
       z-index: 10000;
       overflow: visible;
       padding: 0;
-      margin-bottom: 0;
+      margin-top: 0;
       background-color: transparent;
+      border: none;
    }
 }
 
@@ -665,23 +699,43 @@ onMounted(() => {
       position: relative;
       display: flex;
       align-items: flex-start;
-      gap: 10px;
       transition: transform 0.4s ease-in-out;
       transform: translateX(0);
    }
 }
 
+.weather-time-inner {
+   width: 100%;
+   background-color: rgba(34, 34, 34, 0.5);
+
+   @media (max-width: 1549px) {
+      background-color: rgba(34, 34, 34, 0.5);
+      backdrop-filter: blur(10px);
+      border-radius: 6px;
+      max-height: calc(100vh - 140px);
+      overflow-y: auto;
+      min-width: 280px;
+   }
+}
+
+.weather-time-content-title {
+   font-size: 0.875rem;
+   text-align: center;
+   border-bottom: 1px solid #fff;
+   padding: 5px;
+}
+
 .weather-time-wrapper.collapsed {
    @media (max-width: 1549px) {
       transform: translateX(
-         calc(100% - 50px)
+         calc(100% - 40px)
       ); /* Уезжает, оставляя только кнопку */
    }
 }
 
-/* Кнопка сворачивания для мобильных */
+/* Кнопка сворачивания */
 .collapse-toggle-btn {
-   display: none;
+   display: none; /* Скрываем кнопку сворачивания на десктопе */
 
    @media (max-width: 1549px) {
       display: block;
@@ -708,29 +762,49 @@ onMounted(() => {
    }
 }
 
-/* Контент для мобильных */
+/* Контент */
 .weather-time-content {
+   /* max-height: 500px;
+   overflow-y: auto; */
+
    @media (max-width: 1549px) {
-      background-color: rgba(34, 34, 34, 0.5);
-      backdrop-filter: blur(10px);
-      border-radius: 6px;
-      padding: 15px;
-      max-width: 280px;
-      max-height: calc(100vh - 140px);
-      overflow-y: auto;
+      padding-bottom: 15px;
    }
 }
 
+.weather-time-inner::-webkit-scrollbar {
+   width: 4px;
+}
+
+.weather-time-inner::-webkit-scrollbar-track {
+   background: rgba(255, 255, 255, 0.1);
+   border-radius: 2px;
+}
+
+.weather-time-inner::-webkit-scrollbar-thumb {
+   background: rgba(255, 255, 255, 0.3);
+   border-radius: 2px;
+}
+
+.weather-time-inner::-webkit-scrollbar-thumb:hover {
+   background: rgba(255, 255, 255, 0.5);
+}
+
 .section {
-   margin-bottom: 5px;
+   margin-top: 15px;
+   margin-bottom: 10px;
+   padding: 0 20px 10px;
+   border-bottom: 1px solid #fff;
 }
 
 .section:first-child {
-   margin-bottom: 15px;
+   padding-bottom: 15px;
 }
 
 .section:last-child {
    margin-bottom: 0;
+   border-bottom: none;
+   padding-bottom: 0;
 }
 
 .section-title-wrapper {
@@ -767,23 +841,23 @@ onMounted(() => {
    display: flex;
    align-items: center;
    justify-content: center;
-   margin-bottom: 15px;
+   margin-bottom: 8px;
    position: relative;
 }
 
 .time-value {
-   font-size: 1.5rem;
+   font-size: 1rem;
    font-weight: bold;
    color: #fff;
-   margin: 0 20px;
    user-select: none;
+   padding: 0 10px;
 }
 
 .time-controls {
    position: absolute;
    width: 100%;
    display: flex;
-   justify-content: space-between;
+   justify-content: space-around;
    pointer-events: none;
 }
 
@@ -799,7 +873,6 @@ onMounted(() => {
 
 .time-arrow:hover {
    color: #fff;
-   transform: scale(1.1);
 }
 
 .time-slider-container {
@@ -1031,7 +1104,7 @@ onMounted(() => {
    gap: 10px;
    cursor: pointer;
    transition: all 0.3s ease;
-   margin-bottom: 20px;
+   margin-bottom: 10px;
    user-select: none;
 }
 
@@ -1073,5 +1146,25 @@ onMounted(() => {
    height: 50px;
    user-select: none;
    pointer-events: none;
+}
+
+/* SEASON Section */
+.season-buttons {
+   display: flex;
+   flex: 1 1 25%;
+   justify-content: space-evenly;
+   align-items: center;
+}
+
+.season-button {
+   cursor: pointer;
+   transition: all 0.3s ease;
+   user-select: none;
+   border: none;
+   background-color: transparent;
+}
+
+.season-button.active {
+   transform: scale(1.1);
 }
 </style>
