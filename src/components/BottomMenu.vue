@@ -148,7 +148,7 @@ const menuItems = computed(() => [
    },
    {
       id: 6,
-      name: "Инфраструктура",
+      name: "Infrastructure",
       icon: "src/assets/icons/bottomMenu/infrastructure.png",
    },
    // {
@@ -174,6 +174,13 @@ const menuItems = computed(() => [
       id: 10,
       name: "Holo mode",
       icon: "src/assets/icons/bottomMenu/hold-mode.svg",
+      width: "35px",
+      height: "35px",
+   },
+   {
+      id: 11,
+      name: "Demo mode",
+      icon: "src/assets/icons/bottomMenu/DemoMode.svg",
       width: "35px",
       height: "35px",
    },
@@ -223,6 +230,8 @@ const handleItemClick = (item) => {
          wasActive,
          isNowActive: isHoloModeActive.value,
       });
+   } else if (item.name === "Demo mode") {
+      emit("sendToEngine", { DemoMode: "" });
    }
 };
 

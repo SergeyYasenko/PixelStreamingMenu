@@ -6,10 +6,10 @@
             src="../assets/icons/logo.png"
             alt="logo"
          />
-         <div class="house-body-logo-title">PALLADIUM</div>
+         <!-- <div class="house-body-logo-title">PALLADIUM</div>
          <div class="house-body-logo-text">
             prime real estate development L . L . C .
-         </div>
+         </div> -->
       </div>
       <div class="house-body-top-title">Select residence</div>
       <div class="house-body-top-num-wrapper">
@@ -94,8 +94,7 @@ const corpRows = computed(() => {
 }
 
 .house-body-logo-img {
-   width: 50px;
-   height: 50px;
+   max-width: 100%;
    margin-bottom: 5px;
    user-select: none;
    pointer-events: none;
