@@ -206,7 +206,7 @@ const handleItemClick = (item) => {
       emit("showWeatherTime");
    } else if (item.name === "Сезон") {
       emit("sendToEngine", { season: "" });
-   } else if (item.name === "Инфраструктура") {
+   } else if (item.name === "Infrastructure") {
       emit("showDataBlocks", "infrastructure");
       emit("sendToEngine", { infrastructure: "" });
    } else if (item.name === "Environment") {
