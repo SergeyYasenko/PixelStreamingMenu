@@ -27,7 +27,7 @@
          </div>
       </div>
       <div class="bottom-menu-company" @click="handleGoodiniClick">
-         GOODINI
+         HOLO X
          <div
             class="goodini-settings-container"
             v-if="showSettings"
@@ -83,7 +83,7 @@
             </div>
          </div>
          <div class="bottom-menu-company" @click="handleGoodiniClick">
-            GOODINI
+            HOLO X
             <div
                class="goodini-settings-container"
                v-if="showSettings"

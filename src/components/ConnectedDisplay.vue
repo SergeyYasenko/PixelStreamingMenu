@@ -6,12 +6,28 @@
                class="left-menu-wrapper"
                :class="{ collapsed: menusCollapsed.leftMenu }"
             >
-               <button
-                  class="left-menu-toggle-btn"
-                  @click="toggleMenuCollapse('leftMenu')"
-               >
-                  {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
-               </button>
+               <div class="house-body-buttons-row">
+                  <button
+                     class="left-menu-toggle-btn"
+                     @click="toggleMenuCollapse('leftMenu')"
+                  >
+                     {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
+                  </button>
+                  <div class="left-menu-buttons">
+                     <button
+                        class="left-menu-info-btn"
+                        @click="handleAboutCompanyClick"
+                     >
+                        About company
+                     </button>
+                     <button
+                        class="left-menu-info-btn"
+                        @click="handleAboutProjectClick"
+                     >
+                        About project
+                     </button>
+                  </div>
+               </div>
                <div class="left-menu-inner">
                   <CorpSelector
                      :corps="corps"
@@ -84,6 +100,14 @@
          </svg>
       </div>
 
+      <!-- Вертикальный range input в правой части -->
+      <VerticalRangeInput
+         v-model="verticalRangeValue"
+         :has-open-menus="hasOpenExpandedMenus"
+         :has-collapsed-menus="hasCollapsedMenus"
+         @update:modelValue="handleVerticalRangeChange"
+      />
+
       <div class="bottom-menu-wrapper">
          <BottomMenu
             @hide="hideAllMenus"
@@ -128,7 +152,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
 import CorpSelector from "./CorpSelector.vue";
 import FloorSelector from "./FloorSelector.vue";
 import BottomMenu from "./BottomMenu.vue";
@@ -137,6 +161,7 @@ import ApartmentSelector from "./ApartmentSelector.vue";
 import WeatherTimeSelector from "./WeatherTimeSelector.vue";
 import DataBlocksSelector from "./DataBlocksSelector.vue";
 import ApartmentCard from "./ApartmentCard.vue";
+import VerticalRangeInput from "./VerticalRangeInput.vue";
 
 const props = defineProps({
    lastMessage: {
@@ -229,6 +254,12 @@ const menusCollapsed = ref({
    apartmentCard: false,
    leftMenu: false,
 });
+
+// Значение вертикального range input (от -1 до 1, по умолчанию 0)
+const verticalRangeValue = ref(0);
+
+// Интервал для периодической отправки значения (15 раз в секунду)
+let valueIntervalId = null;
 
 // Проверка открытых и развернутых меню для управления z-index камеры
 const hasOpenExpandedMenus = computed(() => {
@@ -532,6 +563,73 @@ const handleExitCross = () => {
    showExitCross.value = false;
    emit("sendToEngine", { exit: "" });
 };
+
+// Функция отправки значения на UE (как строка)
+const sendVerticalRangeValue = () => {
+   emit("sendToEngine", { value: verticalRangeValue.value.toFixed(1) });
+};
+
+// Запуск интервала для периодической отправки значения (только если значение != 0)
+const startValueInterval = () => {
+   // Не запускаем интервал, если значение равно 0
+   if (verticalRangeValue.value === 0) {
+      return;
+   }
+
+   // Очищаем существующий интервал, если есть
+   if (valueIntervalId) {
+      clearInterval(valueIntervalId);
+   }
+
+   // Отправляем значение 15 раз в секунду (каждые ~66.67ms)
+   valueIntervalId = setInterval(() => {
+      // Проверяем, не стало ли значение 0 - если да, останавливаем интервал
+      if (verticalRangeValue.value === 0) {
+         stopValueInterval();
+         return;
+      }
+      sendVerticalRangeValue();
+   }, 1000 / 15);
+};
+
+// Остановка интервала
+const stopValueInterval = () => {
+   if (valueIntervalId) {
+      clearInterval(valueIntervalId);
+      valueIntervalId = null;
+   }
+};
+
+// Обработчик изменения вертикального range input
+const handleVerticalRangeChange = (value) => {
+   verticalRangeValue.value = value;
+
+   // Если значение равно 0, отправляем один раз и останавливаем интервал
+   if (value === 0) {
+      stopValueInterval();
+      sendVerticalRangeValue(); // Отправляем 0 один раз
+   } else {
+      // Если значение не равно 0, запускаем/продолжаем интервал
+      sendVerticalRangeValue(); // Немедленная отправка при изменении
+      startValueInterval(); // Запускаем периодическую отправку
+   }
+};
+
+// Очищаем интервал при размонтировании
+onBeforeUnmount(() => {
+   stopValueInterval();
+});
+
+// Обработчики кнопок информации
+const handleAboutCompanyClick = () => {
+   // Отправляем команду "AboutCompany" на UE
+   emit("sendToEngine", { AboutCompany: "" });
+};
+
+const handleAboutProjectClick = () => {
+   // Отправляем команду "AboutProject" на UE
+   emit("sendToEngine", { AboutProject: "" });
+};
 </script>
 
 <style scoped>
@@ -579,9 +677,17 @@ const handleExitCross = () => {
 .left-menu-wrapper.collapsed {
    @media (max-width: 1549px) {
       transform: translateX(
-         calc(-100% + 40px)
+         calc(-100% + 283px)
       ); /* Уезжает влево, оставляя только кнопку */
    }
+}
+
+.house-body-buttons-row {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   width: 100%;
+   order: 2;
 }
 
 .left-menu-toggle-btn {
@@ -603,11 +709,47 @@ const handleExitCross = () => {
       z-index: 50;
       user-select: none;
       flex-shrink: 0;
-      order: 2; /* Кнопка справа от контента */
    }
 }
 
 .left-menu-toggle-btn:hover {
+   @media (max-width: 1549px) {
+      background: rgba(255, 255, 255, 0.3);
+   }
+}
+
+.left-menu-buttons {
+   display: none;
+
+   @media (max-width: 1549px) {
+      display: flex;
+      gap: 10px;
+      order: 3; /* Кнопки справа от стрелки сворачивания */
+      margin-left: 10px;
+   }
+}
+
+.left-menu-info-btn {
+   display: none;
+   text-transform: uppercase;
+
+   @media (max-width: 1549px) {
+      display: block;
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #fff;
+      font-size: 0.75rem;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      white-space: nowrap;
+      user-select: none;
+      font-family: inherit;
+   }
+}
+
+.left-menu-info-btn:hover {
    @media (max-width: 1549px) {
       background: rgba(255, 255, 255, 0.3);
    }
