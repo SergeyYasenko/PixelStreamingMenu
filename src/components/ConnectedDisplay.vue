@@ -2,47 +2,63 @@
    <div class="connected-display">
       <div class="hous-wrapper">
          <div class="house-body">
-            <div
-               class="left-menu-wrapper"
-               :class="{ collapsed: menusCollapsed.leftMenu }"
-            >
-               <div class="house-body-buttons-row">
-                  <button
-                     class="left-menu-toggle-btn"
-                     @click="toggleMenuCollapse('leftMenu')"
-                  >
-                     {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
-                  </button>
-                  <div class="left-menu-buttons">
+            <div class="house-body-wrapper">
+               <div
+                  class="left-menu-wrapper"
+                  :class="{ collapsed: menusCollapsed.leftMenu }"
+               >
+                  <div class="house-body-buttons-row">
                      <button
-                        class="left-menu-info-btn"
-                        @click="handleAboutCompanyClick"
+                        class="left-menu-toggle-btn"
+                        @click="toggleMenuCollapse('leftMenu')"
                      >
-                        About company
+                        {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
                      </button>
-                     <button
-                        class="left-menu-info-btn"
-                        @click="handleAboutProjectClick"
-                     >
-                        About project
-                     </button>
+                     <div class="left-menu-buttons">
+                        <button
+                           class="left-menu-info-btn"
+                           @click="handleAboutCompanyClick"
+                        >
+                           About company
+                        </button>
+                        <button
+                           class="left-menu-info-btn"
+                           @click="handleAboutProjectClick"
+                        >
+                           About project
+                        </button>
+                     </div>
+                  </div>
+                  <div class="left-menu-inner">
+                     <CorpSelector
+                        :corps="corps"
+                        :selectedCorp="selectedCorp"
+                        @selectCorp="selectCorp"
+                     />
+                     <FloorSelector
+                        :floors="floors"
+                        :selectedCorp="selectedCorp"
+                        :selectedCorpName="selectedCorpName"
+                        :selectedFloor="selectedFloor"
+                        :showFloors="showFloors"
+                        @selectFloor="selectFloor"
+                        @hideFloors="hideFloors"
+                     />
                   </div>
                </div>
-               <div class="left-menu-inner">
-                  <CorpSelector
-                     :corps="corps"
-                     :selectedCorp="selectedCorp"
-                     @selectCorp="selectCorp"
-                  />
-                  <FloorSelector
-                     :floors="floors"
-                     :selectedCorp="selectedCorp"
-                     :selectedCorpName="selectedCorpName"
-                     :selectedFloor="selectedFloor"
-                     :showFloors="showFloors"
-                     @selectFloor="selectFloor"
-                     @hideFloors="hideFloors"
-                  />
+               <div class="left-menu-info-buttons-desktop">
+                  <button
+                     class="left-menu-info-btn"
+                     @click="handleAboutCompanyClick"
+                  >
+                     About company
+                  </button>
+                  <button
+                     class="left-menu-info-btn"
+                     @click="handleAboutProjectClick"
+                  >
+                     About project
+                  </button>
                </div>
             </div>
             <WeatherTimeSelector
@@ -640,7 +656,7 @@ const handleAboutProjectClick = () => {
    width: 100%;
    height: 100%;
    pointer-events: none;
-   z-index: 10; /* КРИТИЧНО: UI должен быть поверх video (z-index: 0) */
+   z-index: 10;
 }
 
 .hous-wrapper {
@@ -651,7 +667,6 @@ const handleAboutProjectClick = () => {
 
 .house-body {
    min-width: 180px;
-   max-width: 250px;
    width: 100%;
    position: absolute;
    top: 0;
@@ -659,14 +674,25 @@ const handleAboutProjectClick = () => {
    z-index: 5;
    pointer-events: auto;
    @media (max-width: 1549px) {
-      display: flex;
-      gap: 15px;
+      max-width: 250px;
+   }
+}
+
+.house-body-wrapper {
+   display: flex;
+   align-items: flex-start;
+   gap: 15px;
+
+   @media (max-width: 1549px) {
+      flex-direction: column;
    }
 }
 
 /* Left menu wrapper для мобильной версии */
 .left-menu-wrapper {
+   max-width: 250px;
    @media (max-width: 1549px) {
+      max-width: none;
       display: flex;
       align-items: flex-start;
       transition: transform 0.4s ease-in-out;
@@ -677,17 +703,22 @@ const handleAboutProjectClick = () => {
 .left-menu-wrapper.collapsed {
    @media (max-width: 1549px) {
       transform: translateX(
-         calc(-100% + 283px)
+         calc(-100% + 293px)
       ); /* Уезжает влево, оставляя только кнопку */
    }
 }
 
 .house-body-buttons-row {
-   display: flex;
-   align-items: center;
-   justify-content: space-between;
-   width: 100%;
-   order: 2;
+   display: none; /* Скрыты на ПК версии */
+
+   @media (max-width: 1549px) {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      gap: 10px;
+      order: 2;
+   }
 }
 
 .left-menu-toggle-btn {
@@ -719,7 +750,7 @@ const handleAboutProjectClick = () => {
 }
 
 .left-menu-buttons {
-   display: none;
+   display: none; /* Скрыты на ПК версии */
 
    @media (max-width: 1549px) {
       display: flex;
@@ -729,30 +760,34 @@ const handleAboutProjectClick = () => {
    }
 }
 
-.left-menu-info-btn {
-   display: none;
-   text-transform: uppercase;
+.left-menu-info-buttons-desktop {
+   display: flex;
+   gap: 10px;
+   padding-top: 10px;
 
    @media (max-width: 1549px) {
-      display: block;
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: #fff;
-      font-size: 0.75rem;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      white-space: nowrap;
-      user-select: none;
-      font-family: inherit;
+      display: none; /* Скрываем на мобильной версии, там кнопки в другом месте */
    }
 }
 
+.left-menu-info-btn {
+   display: block;
+   background: rgba(255, 255, 255, 0.2);
+   border: none;
+   color: #fff;
+   font-size: 0.75rem;
+   padding: 8px 12px;
+   border-radius: 4px;
+   cursor: pointer;
+   transition: background 0.3s ease;
+   white-space: nowrap;
+   user-select: none;
+   font-family: inherit;
+   text-transform: uppercase;
+}
+
 .left-menu-info-btn:hover {
-   @media (max-width: 1549px) {
-      background: rgba(255, 255, 255, 0.3);
-   }
+   background: rgba(255, 255, 255, 0.3);
 }
 
 .left-menu-inner {

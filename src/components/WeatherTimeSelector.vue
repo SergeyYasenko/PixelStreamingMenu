@@ -683,6 +683,7 @@ onMounted(() => {
 .weather-time-selector {
    position: relative;
    width: 100%;
+   max-width: 250px;
    background-color: rgba(34, 34, 34, 0.5);
    pointer-events: auto;
    border-top: 1px solid #fff;
@@ -695,6 +696,7 @@ onMounted(() => {
       bottom: auto;
       left: auto;
       width: auto;
+      max-width: none;
       height: calc(100vh - 130px);
       display: flex;
       align-items: flex-end;
@@ -719,7 +721,6 @@ onMounted(() => {
 
 .weather-time-inner {
    width: 100%;
-   background-color: rgba(34, 34, 34, 0.5);
 
    @media (max-width: 1549px) {
       background-color: rgba(34, 34, 34, 0.5);
