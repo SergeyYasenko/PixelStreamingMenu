@@ -124,6 +124,9 @@
          @update:modelValue="handleVerticalRangeChange"
       />
 
+      <!-- Мобильные элементы управления -->
+      <MobileControls @sendToEngine="handleSendToEngine" />
+
       <div class="bottom-menu-wrapper">
          <BottomMenu
             @hide="hideAllMenus"
@@ -178,6 +181,7 @@ import WeatherTimeSelector from "./WeatherTimeSelector.vue";
 import DataBlocksSelector from "./DataBlocksSelector.vue";
 import ApartmentCard from "./ApartmentCard.vue";
 import VerticalRangeInput from "./VerticalRangeInput.vue";
+import MobileControls from "./MobileControls.vue";
 
 const props = defineProps({
    lastMessage: {
