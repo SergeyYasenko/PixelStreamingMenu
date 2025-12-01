@@ -86,8 +86,12 @@
 
 <script setup>
 import { ref, onBeforeUnmount } from "vue";
+import { useBottomMenuHeight } from "../composables/useBottomMenuHeight.js";
 
 const emit = defineEmits(["sendToEngine"]);
+
+// Используем composable для автоматического отслеживания высоты BottomMenu
+useBottomMenuHeight();
 
 const activeButton = ref(null);
 let commandIntervalId = null;
@@ -156,7 +160,7 @@ onBeforeUnmount(() => {
 
    @media (max-width: 1549px) {
       position: fixed;
-      bottom: 135px;
+      bottom: var(--bottom-menu-height, 120px);
       left: 20px;
       z-index: 20;
       pointer-events: auto;

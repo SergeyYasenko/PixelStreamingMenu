@@ -290,6 +290,7 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from "vue";
+import { useBottomMenuHeight } from "../composables/useBottomMenuHeight.js";
 
 const props = defineProps({
    isCollapsed: {
@@ -299,6 +300,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["close", "sendToEngine", "toggleCollapse"]);
+
+// Используем composable для автоматического отслеживания высоты BottomMenu
+useBottomMenuHeight();
 
 // Обработчик клика по кнопке сворачивания
 const toggleCollapse = () => {
@@ -595,12 +599,6 @@ const validateInput = (type) => {
    }
 };
 
-// Cleanup on unmount
-onUnmounted(() => {
-   document.removeEventListener("mousemove", handleDrag);
-   document.removeEventListener("mouseup", stopDrag);
-});
-
 // Function to send single weather data field to engine
 const sendSingleWeatherField = (key, value) => {
    const weatherData = {
@@ -677,6 +675,12 @@ onMounted(() => {
    );
    sendSingleWeatherField("timezone", timeZone.value);
 });
+
+// Cleanup on unmount
+onUnmounted(() => {
+   document.removeEventListener("mousemove", handleDrag);
+   document.removeEventListener("mouseup", stopDrag);
+});
 </script>
 
 <style scoped>
@@ -691,19 +695,21 @@ onMounted(() => {
 
    @media (max-width: 1549px) {
       position: fixed;
-      top: 0;
+      top: auto;
       right: 0;
-      bottom: auto;
+      bottom: var(--bottom-menu-height, 120px);
       left: auto;
       width: auto;
       max-width: none;
-      height: calc(100vh - 130px);
+      height: auto;
+      max-height: calc(100vh - var(--bottom-menu-height, 120px) - 20px);
       display: flex;
       align-items: flex-end;
       z-index: 10000;
       overflow: visible;
       padding: 0;
       margin-top: 0;
+      margin-bottom: 10px;
       background-color: transparent;
       border: none;
    }

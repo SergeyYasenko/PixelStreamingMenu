@@ -30,6 +30,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { useBottomMenuHeight } from "../composables/useBottomMenuHeight.js";
 
 const props = defineProps({
    modelValue: {
@@ -59,6 +60,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["update:modelValue"]);
+
+// Используем composable для автоматического отслеживания высоты BottomMenu
+useBottomMenuHeight();
 
 // Инвертируем значение для слайдера: 1 вверху (-1 в исходном значении = 1 в слайдере)
 const invertedValue = computed(() => {
@@ -94,6 +98,7 @@ const handleMouseUp = () => {
 
    @media (max-width: 1549px) {
       right: 50px;
+      bottom: var(--bottom-menu-height, 120px);
       z-index: 5;
    }
 }
