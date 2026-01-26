@@ -59,6 +59,22 @@
                <span class="setting-text">FULLSCREEN</span>
             </label>
          </div>
+         <div class="setting-item">
+            <button
+               class="setting-button"
+               @click.stop="handleRestartClick"
+            >
+               RESTART
+            </button>
+         </div>
+         <div class="setting-item">
+            <button
+               class="setting-button"
+               @click.stop="handleExitClick"
+            >
+               EXIT
+            </button>
+         </div>
       </div>
    </div>
 </template>
@@ -118,6 +134,14 @@ const handleQualityClick = (quality) => {
    if (key) {
       emit("sendToEngine", { [key]: "" });
    }
+};
+
+const handleRestartClick = () => {
+   emit("sendToEngine", { restart: "" });
+};
+
+const handleExitClick = () => {
+   emit("sendToEngine", { exit: "" });
 };
 
 // Функция для входа/выхода из fullscreen (кросс-браузерная)
