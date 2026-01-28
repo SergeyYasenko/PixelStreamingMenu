@@ -166,13 +166,13 @@ const menuItems = computed(() => [
    //    width: "44px",
    //    height: "44px",
    // },
-   {
-      id: 9,
-      name: "Next mode",
-      icon: "src/assets/icons/bottomMenu/next-mode.svg",
-      width: "35px",
-      height: "35px",
-   },
+   // {
+   //    id: 9,
+   //    name: "Next mode",
+   //    icon: "src/assets/icons/bottomMenu/next-mode.svg",
+   //    width: "35px",
+   //    height: "35px",
+   // },
    {
       id: 10,
       name: "Holo mode",
@@ -187,13 +187,13 @@ const menuItems = computed(() => [
       width: "35px",
       height: "35px",
    },
-   {
-      id: 12,
-      name: "Photomode",
-      icon: "src/assets/icons/bottomMenu/photomode.svg",
-      width: "35px",
-      height: "35px",
-   },
+   // {
+   //    id: 12,
+   //    name: "Photomode",
+   //    icon: "src/assets/icons/bottomMenu/photomode.svg",
+   //    width: "35px",
+   //    height: "35px",
+   // },
    {
       id: 13,
       name: "Album",
@@ -245,7 +245,7 @@ const handleItemClick = (item) => {
    } else if (item.name === "Курсор") {
       emit("sendToEngine", { cursor: "" });
    } else if (item.name === "Next mode") {
-      emit("sendToEngine", { nextmode: "" });
+      // emit("sendToEngine", { nextmode: "" });
    } else if (item.name === "Holo mode") {
       // Toggle Holo mode - активирует/деактивирует кнопку Инфраструктура
       const wasActive = isHoloModeActive.value;
@@ -258,7 +258,7 @@ const handleItemClick = (item) => {
          isNowActive: isHoloModeActive.value,
       });
    } else if (item.name === "Photomode") {
-      emit("sendToEngine", { photo: "" });
+      // emit("sendToEngine", { photo: "" });
    } else if (item.name === "Album") {
       emit("sendToEngine", { album: "" });
    } else if (item.name === "Reset") {
