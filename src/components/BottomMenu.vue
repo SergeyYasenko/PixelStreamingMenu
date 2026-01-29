@@ -7,7 +7,6 @@
             :class="{
                disabled: item.disabled,
                active: item.name === 'Holo mode' && isHoloModeActive,
-               'center-item': item.center,
             }"
             v-for="item in menuItems"
             :key="item.id"
@@ -18,7 +17,7 @@
                :src="item.icon"
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
-               :class="['bottom-menu-icon', { 'reset-icon': item.isReset }]"
+               class="bottom-menu-icon"
             />
             <span
                class="bottom-menu-text"
@@ -51,7 +50,6 @@
             :class="{
                disabled: item.disabled,
                active: item.name === 'Holo mode' && isHoloModeActive,
-               'center-item': item.center,
             }"
             v-for="item in mobileMenuItems"
             :key="item.id"
@@ -62,7 +60,7 @@
                :src="item.icon"
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
-               :class="['bottom-menu-icon', { 'reset-icon': item.isReset }]"
+               class="bottom-menu-icon"
             />
             <span
                class="bottom-menu-text"
@@ -127,7 +125,6 @@ const menuItems = computed(() => [
       name: "Home",
       icon: "src/assets/icons/bottomMenu/home.png",
       showText: false,
-      center: true,
    },
    {
       id: 2,
@@ -166,13 +163,13 @@ const menuItems = computed(() => [
    //    width: "44px",
    //    height: "44px",
    // },
-   // {
-   //    id: 9,
-   //    name: "Next mode",
-   //    icon: "src/assets/icons/bottomMenu/next-mode.svg",
-   //    width: "35px",
-   //    height: "35px",
-   // },
+   {
+      id: 9,
+      name: "Next mode",
+      icon: "src/assets/icons/bottomMenu/next-mode.svg",
+      width: "35px",
+      height: "35px",
+   },
    {
       id: 10,
       name: "Holo mode",
@@ -187,30 +184,6 @@ const menuItems = computed(() => [
       width: "35px",
       height: "35px",
    },
-   // {
-   //    id: 12,
-   //    name: "Photomode",
-   //    icon: "src/assets/icons/bottomMenu/photomode.svg",
-   //    width: "35px",
-   //    height: "35px",
-   // },
-   {
-      id: 13,
-      name: "Album",
-      icon: "src/assets/icons/bottomMenu/album.svg",
-      width: "35px",
-      height: "35px",
-   },
-   {
-      id: 14,
-      name: "Reset",
-      icon: "src/assets/icons/bottomMenu/reset.svg",
-      width: "35px",
-      height: "35px",
-      isReset: true, // Флаг для применения поворота
-      center: true,
-      showText: false,
-   }
 ]);
 
 // Для мобильной версии исключаем кнопку Home (id: 1)
@@ -245,7 +218,7 @@ const handleItemClick = (item) => {
    } else if (item.name === "Курсор") {
       emit("sendToEngine", { cursor: "" });
    } else if (item.name === "Next mode") {
-      // emit("sendToEngine", { nextmode: "" });
+      emit("sendToEngine", { nextmode: "" });
    } else if (item.name === "Holo mode") {
       // Toggle Holo mode - активирует/деактивирует кнопку Инфраструктура
       const wasActive = isHoloModeActive.value;
@@ -257,12 +230,6 @@ const handleItemClick = (item) => {
          wasActive,
          isNowActive: isHoloModeActive.value,
       });
-   } else if (item.name === "Photomode") {
-      // emit("sendToEngine", { photo: "" });
-   } else if (item.name === "Album") {
-      emit("sendToEngine", { album: "" });
-   } else if (item.name === "Reset") {
-      emit("sendToEngine", { reset: "" });
    } else if (item.name === "Demo mode") {
       emit("sendToEngine", { DemoMode: "" });
    }
@@ -356,10 +323,6 @@ const handleGoodiniSendToEngine = (data) => {
    opacity: 0.5;
 }
 
-.bottom-menu-item.center-item {
-   justify-content: center;
-}
-
 .bottom-menu-icon {
    width: 26px;
    height: 26px;
@@ -367,10 +330,6 @@ const handleGoodiniSendToEngine = (data) => {
    margin-right: 5px;
    user-select: none;
    pointer-events: none;
-}
-
-.bottom-menu-icon.reset-icon {
-   transform: rotate(90deg);
 }
 
 .bottom-menu-text {
