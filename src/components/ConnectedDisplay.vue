@@ -1,5 +1,8 @@
 <template>
    <div class="connected-display">
+      <!-- Основной интерфейс (скрыт в режиме видео аватара). v-show чтобы не перемонтировать — иначе WeatherTimeSelector при монтировании отправляет погоду/время -->
+      <Transition name="interface-fade">
+      <div v-show="!showAvatarVideoMode" key="main" class="connected-display-main">
       <div class="hous-wrapper">
          <div class="house-body">
             <div class="house-body-wrapper">
@@ -17,7 +20,7 @@
                      <div class="left-menu-buttons">
                         <button
                            class="left-menu-info-btn"
-                           @click="showAlAvatarModal = true"
+                           @click="showAIAvatarModal = true"
                         >
                            AI Avatar
                         </button>
@@ -43,9 +46,9 @@
                <div class="left-menu-info-buttons-desktop">
                   <button
                      class="left-menu-info-btn"
-                     @click="showAlAvatarModal = true"
+                     @click="showAIAvatarModal = true"
                   >
-                     Al Avatar
+                     AI Avatar
                   </button>
                </div>
             </div>
@@ -74,11 +77,11 @@
          @toggleCollapse="toggleMenuCollapse('apartmentCard')"
       />
 
-      <!-- Модальное окно Al Avatar -->
-      <AlAvatarModal
-         :is-visible="showAlAvatarModal"
-         @close="showAlAvatarModal = false"
-         @select="handleAlAvatarSelect"
+      <!-- Модальное окно AI Avatar -->
+      <AIAvatarModal
+         :is-visible="showAIAvatarModal"
+         @close="handleAIAvatarModalClose"
+         @select="handleAIAvatarSelect"
       />
 
       <!-- Крестик для выхода -->
@@ -162,6 +165,28 @@
             @toggleCollapse="toggleMenuCollapse('datablocks')"
          />
       </div>
+      </div>
+      </Transition>
+
+      <!-- Минимальный интерфейс для режима видео аватара -->
+      <Transition name="interface-fade">
+      <div v-show="showAvatarVideoMode" key="avatar" class="avatar-video-overlay">
+         <div class="avatar-video-close" @click="handleAvatarVideoClose" aria-label="Закрыть">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+               <line x1="10" y1="10" x2="30" y2="30" stroke="white" stroke-width="3" stroke-linecap="round" />
+               <line x1="30" y1="10" x2="10" y2="30" stroke="white" stroke-width="3" stroke-linecap="round" />
+            </svg>
+         </div>
+         <div class="avatar-video-buttons-left">
+            <button class="avatar-video-btn" @click="handleAvatarVideoBtn('yacht')">The Royal Yacht</button>
+            <button class="avatar-video-btn" @click="handleAvatarVideoBtn('magnolia')">MAGNOLIA HOTEL APARTMENTS</button>
+            <button class="avatar-video-btn" @click="handleAvatarVideoBtn('coralis')">CORALIS</button>
+         </div>
+         <div class="avatar-video-buttons-right">
+            <button class="avatar-video-btn" @click="handleAvatarVideoBtn('holox')">HOLO X</button>
+         </div>
+      </div>
+      </Transition>
    </div>
 </template>
 
@@ -177,7 +202,7 @@ import DataBlocksSelector from "./DataBlocksSelector.vue";
 import ApartmentCard from "./ApartmentCard.vue";
 import VerticalRangeInput from "./VerticalRangeInput.vue";
 import MobileControls from "./MobileControls.vue";
-import AlAvatarModal from "./AlAvatarModal.vue";
+import AIAvatarModal from "./AIAvatarModal.vue";
 
 const props = defineProps({
    lastMessage: {
@@ -207,8 +232,12 @@ const showApartmentCard = ref(false);
 // Показ крестика для выхода
 const showExitCross = ref(false);
 
-// Модальное окно Al Avatar
-const showAlAvatarModal = ref(false);
+// Модальное окно AI Avatar
+const showAIAvatarModal = ref(false);
+
+// Режим видео аватара (скрыт весь интерфейс, только кнопки)
+const showAvatarVideoMode = ref(false);
+const selectedAvatarName = ref(null);
 
 // Обработка данных из Unreal Engine
 watch(
@@ -577,9 +606,30 @@ const handleFirstPersonView = (data) => {
    emit("sendToEngine", payload);
 };
 
-// Обработчик выбора аватара в Al Avatar
-const handleAlAvatarSelect = (name) => {
-   emit("sendToEngine", { AlAvatar: name });
+// Обработчик выбора аватара в AI Avatar
+const handleAIAvatarSelect = (name) => {
+   showAIAvatarModal.value = false;
+   showAvatarVideoMode.value = true;
+   selectedAvatarName.value = name;
+   emit("sendToEngine", { AIAvatar: name });
+};
+
+// Закрытие модального окна AI Avatar
+const handleAIAvatarModalClose = () => {
+   showAIAvatarModal.value = false;
+   emit("sendToEngine", { close: "" });
+};
+
+// Закрытие режима видео аватара
+const handleAvatarVideoClose = () => {
+   showAvatarVideoMode.value = false;
+   selectedAvatarName.value = null;
+   emit("sendToEngine", { close: "" });
+};
+
+// Кнопки в режиме видео аватара — отправляем название кнопки в UE
+const handleAvatarVideoBtn = (name) => {
+   emit("sendToEngine", { AIAvatarBtn: name });
 };
 
 // Обработчик клика на крестик
@@ -657,6 +707,27 @@ onBeforeUnmount(() => {
    z-index: 10;
 }
 
+.connected-display-main {
+   position: absolute;
+   inset: 0;
+}
+
+/* Переход скрытия/появления при клике на персонажа */
+.interface-fade-enter-active,
+.interface-fade-leave-active {
+   transition: opacity 0.3s ease;
+}
+
+.interface-fade-enter-from,
+.interface-fade-leave-to {
+   opacity: 0;
+}
+
+.interface-fade-enter-to,
+.interface-fade-leave-from {
+   opacity: 1;
+}
+
 .hous-wrapper {
    position: relative;
    width: 100%;
@@ -701,8 +772,8 @@ onBeforeUnmount(() => {
 .left-menu-wrapper.collapsed {
    @media (max-width: 1549px) {
       transform: translateX(
-         calc(-100% + 293px)
-      ); /* Уезжает влево, оставляя только кнопку */
+         calc(-100% + 135px)
+      ); /* Уезжает влево, оставляя только кнопку сворачивания и AI Avatar */
    }
 }
 
@@ -823,5 +894,79 @@ onBeforeUnmount(() => {
 
 .exit-cross svg {
    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+/* Режим видео аватара — минимальный интерфейс */
+.avatar-video-overlay {
+   position: fixed;
+   inset: 0;
+   pointer-events: none;
+   z-index: 20;
+}
+
+.avatar-video-overlay > * {
+   pointer-events: auto;
+}
+
+.avatar-video-close {
+   position: fixed;
+   top: 38px;
+   right: 40px;
+   width: 40px;
+   height: 40px;
+   cursor: pointer;
+   opacity: 0.8;
+   transition: opacity 0.3s ease;
+   @media (max-width: 1549px) {
+      top: 20px;
+      right: 20px;
+   }
+}
+
+.avatar-video-close:hover {
+   opacity: 1;
+}
+
+.avatar-video-close svg {
+   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.avatar-video-buttons-left {
+   position: fixed;
+   bottom: 20px;
+   left: 20px;
+   display: flex;
+   gap: 10px;
+   @media (max-width: 1549px) {
+      bottom: 15px;
+      left: 15px;
+   }
+}
+
+.avatar-video-buttons-right {
+   position: fixed;
+   bottom: 20px;
+   right: 20px;
+   @media (max-width: 1549px) {
+      bottom: 15px;
+      right: 15px;
+   }
+}
+
+.avatar-video-btn {
+   background: rgba(255, 255, 255, 0.2);
+   border: none;
+   color: #fff;
+   font-size: 0.875rem;
+   padding: 10px 16px;
+   border-radius: 4px;
+   cursor: pointer;
+   transition: background 0.3s ease;
+   font-family: inherit;
+   letter-spacing: 1px;
+}
+
+.avatar-video-btn:hover {
+   background: rgba(255, 255, 255, 0.3);
 }
 </style>
