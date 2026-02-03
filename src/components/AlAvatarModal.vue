@@ -77,12 +77,12 @@ const close = () => emit("close");
 const selectCard = (name) => emit("select", name);
 
 const avatars = [
-   { name: "russian", image: russianImg, flag: flagRussia },
    { name: "arabian_female", image: arabianFemaleImg, flag: flagOAE },
    { name: "arabian_male", image: arabianMaleImg, flag: flagOAE },
-   { name: "hindi", image: hindiImg, flag: flagIndia },
-   { name: "english", image: englishImg, flag: flagUK },
    { name: "english_robo", image: englishRoboImg, flag: flagUK },
+   { name: "english", image: englishImg, flag: flagUK },
+   { name: "hindi", image: hindiImg, flag: flagIndia },
+   { name: "russian", image: russianImg, flag: flagRussia },
 ];
 </script>
 
