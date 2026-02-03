@@ -20,7 +20,7 @@
                      <div class="left-menu-buttons">
                         <button
                            class="left-menu-info-btn"
-                           @click="showAIAvatarModal = true"
+                           @click="handleAIAvatarButtonClick"
                         >
                            AI Avatar
                         </button>
@@ -46,7 +46,7 @@
                <div class="left-menu-info-buttons-desktop">
                   <button
                      class="left-menu-info-btn"
-                     @click="showAIAvatarModal = true"
+                     @click="handleAIAvatarButtonClick"
                   >
                      AI Avatar
                   </button>
@@ -604,6 +604,12 @@ const handleFirstPersonView = (data) => {
    // Закрываем карточку после перехода в режим первого лица
    handleCloseApartmentCard();
    emit("sendToEngine", payload);
+};
+
+// Клик по кнопке AI Avatar — открыть модалку и отправить "avatar" в UE
+const handleAIAvatarButtonClick = () => {
+   showAIAvatarModal.value = true;
+   emit("sendToEngine", { avatar: "" });
 };
 
 // Обработчик выбора аватара в AI Avatar
