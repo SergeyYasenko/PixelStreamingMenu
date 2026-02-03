@@ -17,15 +17,9 @@
                      <div class="left-menu-buttons">
                         <button
                            class="left-menu-info-btn"
-                           @click="handleAboutCompanyClick"
+                           @click="showAlAvatarModal = true"
                         >
-                           About company
-                        </button>
-                        <button
-                           class="left-menu-info-btn"
-                           @click="handleAboutProjectClick"
-                        >
-                           About project
+                           AI Avatar
                         </button>
                      </div>
                   </div>
@@ -49,15 +43,9 @@
                <div class="left-menu-info-buttons-desktop">
                   <button
                      class="left-menu-info-btn"
-                     @click="handleAboutCompanyClick"
+                     @click="showAlAvatarModal = true"
                   >
-                     About company
-                  </button>
-                  <button
-                     class="left-menu-info-btn"
-                     @click="handleAboutProjectClick"
-                  >
-                     About project
+                     Al Avatar
                   </button>
                </div>
             </div>
@@ -84,6 +72,13 @@
          @close="handleCloseApartmentCard"
          @apartments="handleFirstPersonView"
          @toggleCollapse="toggleMenuCollapse('apartmentCard')"
+      />
+
+      <!-- Модальное окно Al Avatar -->
+      <AlAvatarModal
+         :is-visible="showAlAvatarModal"
+         @close="showAlAvatarModal = false"
+         @select="handleAlAvatarSelect"
       />
 
       <!-- Крестик для выхода -->
@@ -182,6 +177,7 @@ import DataBlocksSelector from "./DataBlocksSelector.vue";
 import ApartmentCard from "./ApartmentCard.vue";
 import VerticalRangeInput from "./VerticalRangeInput.vue";
 import MobileControls from "./MobileControls.vue";
+import AlAvatarModal from "./AlAvatarModal.vue";
 
 const props = defineProps({
    lastMessage: {
@@ -210,6 +206,9 @@ const showApartmentCard = ref(false);
 
 // Показ крестика для выхода
 const showExitCross = ref(false);
+
+// Модальное окно Al Avatar
+const showAlAvatarModal = ref(false);
 
 // Обработка данных из Unreal Engine
 watch(
@@ -578,6 +577,11 @@ const handleFirstPersonView = (data) => {
    emit("sendToEngine", payload);
 };
 
+// Обработчик выбора аватара в Al Avatar
+const handleAlAvatarSelect = (name) => {
+   emit("sendToEngine", { AlAvatar: name });
+};
+
 // Обработчик клика на крестик
 const handleExitCross = () => {
    showExitCross.value = false;
@@ -640,16 +644,6 @@ onBeforeUnmount(() => {
    stopValueInterval();
 });
 
-// Обработчики кнопок информации
-const handleAboutCompanyClick = () => {
-   // Отправляем команду "AboutCompany" на UE
-   emit("sendToEngine", { AboutCompany: "" });
-};
-
-const handleAboutProjectClick = () => {
-   // Отправляем команду "AboutProject" на UE
-   emit("sendToEngine", { AboutProject: "" });
-};
 </script>
 
 <style scoped>
