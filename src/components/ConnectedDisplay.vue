@@ -170,7 +170,29 @@
 
       <!-- Минимальный интерфейс для режима видео аватара -->
       <Transition name="interface-fade">
-      <div v-show="showAvatarVideoMode" key="avatar" class="avatar-video-overlay">
+      <div
+         v-show="showAvatarVideoMode"
+         key="avatar"
+         class="avatar-video-overlay"
+         @mouseenter="handleVideoOverlayEnter"
+         @mousemove="handleVideoOverlayMove"
+         @mouseleave="handleVideoOverlayLeave"
+      >
+         <!-- Play/Stop overlay — триггер на весь экран, иконка 80x80 по центру -->
+         <div
+            class="avatar-video-play-overlay"
+            :class="{ visible: showVideoPlayOverlay }"
+            @click="handleVideoPlayStopClick"
+         >
+            <div class="avatar-video-play-icon">
+               <svg v-if="!isVideoPlaying" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M8 5v14l11-7z" />
+               </svg>
+               <svg v-else viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
+               </svg>
+            </div>
+         </div>
          <div class="avatar-video-close" @click="handleAvatarVideoClose" aria-label="Закрыть">
             <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
                <line x1="10" y1="10" x2="30" y2="30" stroke="white" stroke-width="3" stroke-linecap="round" />
@@ -238,6 +260,11 @@ const showAIAvatarModal = ref(false);
 // Режим видео аватара (скрыт весь интерфейс, только кнопки)
 const showAvatarVideoMode = ref(false);
 const selectedAvatarName = ref(null);
+
+// Play/Stop overlay — показ по наведению, скрытие через 2 сек после ухода
+const showVideoPlayOverlay = ref(false);
+const isVideoPlaying = ref(true); // true = играет, false = пауза
+let videoOverlayHideTimeout = null;
 
 // Обработка данных из Unreal Engine
 watch(
@@ -612,7 +639,7 @@ const handleAIAvatarButtonClick = () => {
    emit("sendToEngine", { avatar: "" });
 };
 
-// Обработчик выбора аватара в AI Avatar
+// Обработчик выбора аватара в AI Avatar (видео запускается в UE)
 const handleAIAvatarSelect = (name) => {
    showAIAvatarModal.value = false;
    showAvatarVideoMode.value = true;
@@ -628,6 +655,10 @@ const handleAIAvatarModalClose = () => {
 
 // Закрытие режима видео аватара
 const handleAvatarVideoClose = () => {
+   if (videoOverlayHideTimeout) {
+      clearTimeout(videoOverlayHideTimeout);
+      videoOverlayHideTimeout = null;
+   }
    showAvatarVideoMode.value = false;
    selectedAvatarName.value = null;
    emit("sendToEngine", { close: "" });
@@ -636,6 +667,50 @@ const handleAvatarVideoClose = () => {
 // Кнопки в режиме видео аватара — отправляем название кнопки в UE
 const handleAvatarVideoBtn = (name) => {
    emit("sendToEngine", { AIAvatarBtn: name });
+};
+
+// Play/Stop overlay — показ при наведении
+const handleVideoOverlayEnter = () => {
+   if (videoOverlayHideTimeout) {
+      clearTimeout(videoOverlayHideTimeout);
+      videoOverlayHideTimeout = null;
+   }
+   showVideoPlayOverlay.value = true;
+   scheduleVideoOverlayHide(3000); // скрыть через 3 сек без движения
+};
+
+// Play/Stop overlay — при движении курсора сбрасываем таймер неактивности
+const handleVideoOverlayMove = () => {
+   if (videoOverlayHideTimeout) {
+      clearTimeout(videoOverlayHideTimeout);
+      videoOverlayHideTimeout = null;
+   }
+   showVideoPlayOverlay.value = true;
+   scheduleVideoOverlayHide(3000); // скрыть через 3 сек без движения
+};
+
+// Play/Stop overlay — скрытие через 2 сек после ухода курсора
+const handleVideoOverlayLeave = () => {
+   scheduleVideoOverlayHide(2000);
+};
+
+const scheduleVideoOverlayHide = (delay) => {
+   if (videoOverlayHideTimeout) clearTimeout(videoOverlayHideTimeout);
+   videoOverlayHideTimeout = setTimeout(() => {
+      showVideoPlayOverlay.value = false;
+      videoOverlayHideTimeout = null;
+   }, delay);
+};
+
+// Клик Play/Stop — отправляем playVideo или stopVideo в UE
+const handleVideoPlayStopClick = () => {
+   if (isVideoPlaying.value) {
+      emit("sendToEngine", { stopVideo: "" });
+      isVideoPlaying.value = false;
+   } else {
+      emit("sendToEngine", { playVideo: "" });
+      isVideoPlaying.value = true;
+   }
 };
 
 // Обработчик клика на крестик
@@ -695,9 +770,12 @@ const handleVerticalRangeChange = (value) => {
    }
 };
 
-// Очищаем интервал при размонтировании
+// Очищаем интервал и таймеры при размонтировании
 onBeforeUnmount(() => {
    stopValueInterval();
+   if (videoOverlayHideTimeout) {
+      clearTimeout(videoOverlayHideTimeout);
+   }
 });
 
 </script>
@@ -906,7 +984,7 @@ onBeforeUnmount(() => {
 .avatar-video-overlay {
    position: fixed;
    inset: 0;
-   pointer-events: none;
+   pointer-events: auto;
    z-index: 20;
 }
 
@@ -914,10 +992,44 @@ onBeforeUnmount(() => {
    pointer-events: auto;
 }
 
+/* Play/Stop overlay — на весь экран, иконка 80x80 по центру */
+.avatar-video-play-overlay {
+   position: fixed;
+   inset: 0;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   cursor: pointer;
+   opacity: 0;
+   transition: opacity 0.3s ease;
+   z-index: 1;
+}
+
+.avatar-video-play-overlay.visible {
+   opacity: 1;
+}
+
+.avatar-video-play-icon {
+   width: 80px;
+   height: 80px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   background: rgba(0, 0, 0, 0.5);
+   border-radius: 50%;
+   color: #fff;
+}
+
+.avatar-video-play-icon svg {
+   width: 40px;
+   height: 40px;
+}
+
 .avatar-video-close {
    position: fixed;
    top: 38px;
    right: 40px;
+   z-index: 10;
    width: 40px;
    height: 40px;
    cursor: pointer;
@@ -941,6 +1053,7 @@ onBeforeUnmount(() => {
    position: fixed;
    bottom: 20px;
    left: 20px;
+   z-index: 10;
    display: flex;
    gap: 10px;
    @media (max-width: 1549px) {
@@ -953,6 +1066,7 @@ onBeforeUnmount(() => {
    position: fixed;
    bottom: 20px;
    right: 20px;
+   z-index: 10;
    @media (max-width: 1549px) {
       bottom: 15px;
       right: 15px;
