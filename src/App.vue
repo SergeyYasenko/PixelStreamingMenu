@@ -18,8 +18,7 @@ body {
    width: 100%;
    height: 100%;
    overflow: hidden;
-   font-family: "Wow Games Sans", system-ui, Avenir, Helvetica, Arial,
-      sans-serif;
+   font-family: "Jost", sans-serif;
 }
 
 #app {

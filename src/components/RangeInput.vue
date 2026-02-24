@@ -1,40 +1,21 @@
 <template>
    <div class="range-input-container">
-      <div class="range-input-title">{{ title }}</div>
+      <div v-if="title" class="range-input-title">{{ title }}</div>
       <div class="range-input-value-container">
-         <div class="range-input-value-row">
-            <div class="range-input-value-wrapper">
-               <div class="range-input-value-text">{{ valuePrefix }}</div>
-               <div class="range-input-value-number">
-                  {{ formatValue(modelValue) }}{{ valueSuffix }}
-               </div>
-            </div>
-            <div class="range-input-wrapper">
-               <!-- Компонент полоски -->
-               <div class="slider-track-container">
-                  <SliderTrack
-                     :value="modelValue"
-                     :min="min"
-                     :max="max"
-                     :height="trackHeight"
-                  />
-               </div>
-
-               <input
-                  type="range"
-                  :min="min"
-                  :max="max"
-                  :step="step"
-                  :value="modelValue"
-                  @input="handleInput"
-                  class="range-input-slider"
-               />
-
-               <!-- Labels под слайдером -->
-               <div class="range-input-labels-bottom">
-                  <span>{{ formatValue(min) }}</span>
-                  <span>{{ formatValue(max) }}</span>
-               </div>
+         <div class="range-input-column">
+            <input
+               type="range"
+               :min="min"
+               :max="max"
+               :step="step"
+               :value="modelValue"
+               @input="handleInput"
+               class="range-input-slider"
+            />
+            <span v-if="displayValue" class="range-input-value">{{ displayValue }}</span>
+            <div v-else-if="valuePrefix || valueSuffix" class="range-input-value-wrapper">
+               <span v-if="valuePrefix" class="range-input-value-prefix">{{ valuePrefix }}</span>
+               <span class="range-input-value-number">{{ formatValue(modelValue) }}{{ valueSuffix }}</span>
             </div>
          </div>
       </div>
@@ -43,12 +24,11 @@
 
 <script setup>
 import { computed } from "vue";
-import SliderTrack from "./SliderTrack.vue";
 
 const props = defineProps({
    title: {
       type: String,
-      required: true,
+      default: "",
    },
    modelValue: {
       type: Number,
@@ -78,17 +58,9 @@ const props = defineProps({
       type: String,
       default: "",
    },
-   thumbSize: {
-      type: Number,
-      default: 20,
-   },
-   thumbOffset: {
-      type: Number,
-      default: 0,
-   },
-   trackHeight: {
-      type: Number,
-      default: 1,
+   displayValue: {
+      type: String,
+      default: "",
    },
 });
 
@@ -98,201 +70,113 @@ const handleInput = (event) => {
    const value = Number(event.target.value);
    emit("update:modelValue", value);
 };
-
-// Computed для размеров в CSS
-const thumbSizeValue = computed(() => `${props.thumbSize}px`);
-const thumbOffsetValue = computed(() => `${props.thumbOffset}px`);
 </script>
 
 <style scoped>
 .range-input-container {
-   border-radius: 4px;
-   min-width: 250px;
    display: flex;
    flex-direction: column;
-   align-self: stretch;
-
-   @media (max-width: 1549px) {
-      min-width: 150px;
-   }
+   width: 100%;
 }
 
 .range-input-title {
-   width: 100%;
-   background-color: rgba(34, 34, 34, 0.8);
    font-size: 0.875rem;
+   font-weight: 500;
    color: #fff;
-   padding-left: 15px;
+   margin-bottom: 8px;
    letter-spacing: 1px;
    text-transform: uppercase;
-   font-weight: 500;
    user-select: none;
-
-   @media (max-width: 1549px) {
-      background-color: transparent;
-      padding-bottom: 10px;
-   }
 }
 
 .range-input-value-container {
-   padding: 15px;
-   backdrop-filter: blur(10px);
-   background-color: rgba(34, 34, 34, 0.2);
-   flex: 1;
+   min-width: 100%;
    display: flex;
    flex-direction: column;
-   justify-content: center;
-   min-height: 0;
-
-   @media (max-width: 1549px) {
-      backdrop-filter: none;
-      background-color: transparent;
-      padding: 0;
-   }
 }
 
-.range-input-value-row {
-   padding: 15px;
-   background-color: rgba(34, 34, 34, 0.5);
+.range-input-column {
    display: flex;
-   flex-direction: column;
-   justify-content: center;
-   flex: 1;
+   flex-direction: column-reverse;
+   align-items: center;
+   gap: 10px;
+}
 
-   @media (max-width: 1549px) {
-      background-color: transparent;
-      padding: 0;
-   }
+.range-input-slider {
+   flex: 1;
+   height: 12px;
+   width: 100%;
+   -webkit-appearance: none;
+   appearance: none;
+   background: #fff;
+   border-radius: 12px;
+   outline: none;
+   cursor: pointer;
+}
+
+.range-input-slider::-webkit-slider-thumb {
+   -webkit-appearance: none;
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+   background: var(--color-hover);
+   cursor: pointer;
+   transition: transform 0.2s ease;
+   margin-top: -4px;
+}
+
+.range-input-slider::-webkit-slider-thumb:hover {
+   transform: scale(1.1)
+}
+
+.range-input-slider::-moz-range-thumb {
+   width: 20px;
+   height: 20px;
+   border-radius: 50%;
+   background: var(--color-hover);
+   cursor: pointer;
+   border: none;
+   transform: translateY(-4px);
+}
+
+.range-input-slider::-webkit-slider-runnable-track {
+   width: 100%;
+   height: 12px;
+   border-radius: 12px;
+   background: rgba(255, 255, 255, 0.2);
+}
+
+.range-input-slider::-moz-range-track {
+   width: 100%;
+   height: 6px;
+   border-radius: 3px;
+   background: rgba(255, 255, 255, 0.2);
+}
+
+.range-input-value {
+   font-size: 1.125rem;
+   color: rgba(255, 255, 255, 0.9);
+   min-width: 90px;
+   white-space: nowrap;
+}
+
+.range-input-value-container {
+  max-width: fit-content;
 }
 
 .range-input-value-wrapper {
    display: flex;
    align-items: center;
-   font-weight: 500;
+   gap: 4px;
+   font-size: 0.875rem;
+   color: rgba(255, 255, 255, 0.9);
 }
 
-.range-input-value-text {
-   font-size: 1rem;
-   color: #fff;
-   margin-right: 5px;
-   text-transform: capitalize;
-   letter-spacing: 5px;
-   user-select: none;
+.range-input-value-prefix {
+   white-space: nowrap;
 }
 
 .range-input-value-number {
-   font-size: 1rem;
-   color: #fff;
-   text-transform: capitalize;
-   letter-spacing: 3px;
-   user-select: none;
-}
-
-.range-input-wrapper {
-   position: relative;
-   width: 100%;
-   padding-top: 20px;
-   padding-bottom: 25px;
-}
-
-/* Labels над слайдером */
-.range-input-labels-top {
-   position: absolute;
-   top: 0;
-   left: 0;
-   right: 0;
-   display: flex;
-   justify-content: flex-end;
-   font-size: 0.75rem;
-   color: rgba(255, 255, 255, 0.8);
-   font-weight: 400;
-}
-
-/* Labels под слайдером */
-.range-input-labels-bottom {
-   position: absolute;
-   bottom: 0;
-   left: 0;
-   right: 0;
-   display: flex;
-   justify-content: space-between;
-   font-size: 0.75rem;
-   color: rgba(255, 255, 255, 0.8);
-   font-weight: 400;
-   user-select: none;
-}
-
-.slider-track-container {
-   position: absolute;
-   top: 17px;
-   left: 0;
-   width: 100%;
-   z-index: 0;
-}
-
-.range-input-slider {
-   width: 100%;
-   height: 1px;
-   border-radius: 2px;
-   background: transparent;
-   outline: none;
-   -webkit-appearance: none;
-   appearance: none;
-   cursor: pointer;
-   position: absolute;
-   top: 17px;
-   left: 0;
-   z-index: 2;
-}
-
-.range-input-slider::-webkit-slider-thumb {
-   -webkit-appearance: none;
-   appearance: none;
-   width: v-bind("thumbSizeValue");
-   height: v-bind("thumbSizeValue");
-   border-radius: 50%;
-   background: #fff;
-   cursor: pointer;
-   border: none;
-   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-   transition: all 0.2s ease;
-   margin-top: calc(
-      v-bind("thumbOffsetValue") - calc(v-bind("thumbSizeValue") / 2)
-   );
-}
-
-.range-input-slider::-webkit-slider-thumb:hover {
-   transform: scale(1.05);
-   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-.range-input-slider::-moz-range-thumb {
-   width: v-bind("thumbSizeValue");
-   height: v-bind("thumbSizeValue");
-   border-radius: 50%;
-   background: #fff;
-   cursor: pointer;
-   border: none;
-   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
-   transition: all 0.2s ease;
-}
-
-.range-input-slider::-moz-range-thumb:hover {
-   transform: scale(1.05);
-   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-}
-
-.range-input-slider::-webkit-slider-runnable-track {
-   width: 100%;
-   height: 1px;
-   border-radius: 2px;
-   background: transparent;
-}
-
-.range-input-slider::-moz-range-track {
-   width: 100%;
-   height: 1px;
-   border-radius: 2px;
-   background: transparent;
+   white-space: nowrap;
 }
 </style>

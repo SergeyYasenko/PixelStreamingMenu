@@ -316,7 +316,7 @@ onMounted(() => {
 .setting-text {
    color: #fff;
    font-size: 0.875rem;
-   font-family: "Roboto", sans-serif;
+   font-family: "Jost", sans-serif;
    letter-spacing: 0.5px;
    text-transform: uppercase;
    user-select: none;
@@ -327,7 +327,7 @@ onMounted(() => {
    border: none;
    color: #fff;
    font-size: 0.875rem;
-   font-family: "Roboto", sans-serif;
+   font-family: "Jost", sans-serif;
    letter-spacing: 0.5px;
    text-transform: uppercase;
    cursor: pointer;

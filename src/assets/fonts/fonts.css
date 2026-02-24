@@ -1,69 +1,14 @@
-@font-face {
-  font-family: 'Wow Games Sans';
-  src: url('./Wow Games Sans.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'PF Stamps Pro Solid';
-  src: url('./PF Stamps Pro Solid.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Roboto';
-  src: url('./Roboto-Bold.woff2') format('woff2');
-  font-weight: bold;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'Fira Sans Condensed';
-  src: url('./FiraSansCondensed-Regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* Основные стили шрифтов */
+/* Основной шрифт — Jost (подключается через Google Fonts в index.html) */
 body {
-  font-family: 'Wow Games Sans', sans-serif;
+  font-family: 'Jost', sans-serif;
   font-weight: normal;
-  text-transform: uppercase;
 }
 
-.font-wow-games {
-  font-family: 'Wow Games Sans', sans-serif;
+.font-jost {
+  font-family: 'Jost', sans-serif;
 }
 
-.font-pf-stamps {
-  font-family: 'PF Stamps Pro Solid', sans-serif;
-}
-
-.font-roboto-bold {
-  font-family: 'Roboto', sans-serif;
-  font-weight: bold;
-}
-
-/* Примеры использования в компонентах */
-.title-wow-games {
-  font-family: 'Wow Games Sans', sans-serif;
-  font-size: 2rem;
-  font-weight: bold;
-}
-
-.button-roboto-bold {
-  font-family: 'Roboto', sans-serif;
-  font-weight: bold;
-  font-size: 1rem;
-}
-
-.stamp-text {
-  font-family: 'PF Stamps Pro Solid', sans-serif;
-  font-size: 1.5rem;
+.font-jost-bold {
+  font-family: 'Jost', sans-serif;
+  font-weight: 700;
 }

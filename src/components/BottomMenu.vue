@@ -6,9 +6,9 @@
             class="bottom-menu-item"
             :class="{
                disabled: item.disabled,
-               active: item.name === 'Holo mode' && isHoloModeActive,
+               active: (item.id === 'holoMode' && isHoloModeActive) || (item.id === 'genplan' && props.screen === 'genplan') || (item.id === 'infrastructure' && props.isInfrastructureActive),
             }"
-            v-for="item in menuItems"
+            v-for="item in leftMenuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
             @click="handleItemClick(item)"
@@ -18,6 +18,7 @@
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
                class="bottom-menu-icon"
+               :class="{ 'bottom-menu-icon-no-text': !item.name || item.showText === false }"
             />
             <span
                class="bottom-menu-text"
@@ -26,7 +27,40 @@
             >
          </div>
       </div>
-      <div class="bottom-menu-company" @click="handleGoodiniClick">
+      <!-- Правая часть: на экране Генплан — Ускорить, Текущее, погода/время; иначе HOLO X -->
+      <div v-if="props.screen === 'genplan'" class="bottom-menu-right">
+         <div
+            class="bottom-menu-item"
+            v-for="item in rightMenuItems"
+            :key="item.id"
+            @click="handleItemClick(item)"
+         >
+            <img
+               :src="item.icon"
+               :alt="item.name"
+               :style="{ width: item.width || '26px', height: item.height || '26px' }"
+               class="bottom-menu-icon"
+               :class="{ 'bottom-menu-icon-no-text': !item.name || item.showText === false }"
+            />
+            <span v-if="item.name && item.showText !== false" class="bottom-menu-text">{{ item.name }}</span>
+         </div>
+         <button type="button" class="bottom-menu-weather-btn" @click="handleWeatherTimeClick('day')" aria-label="День">
+            <img src="@/assets/icons/newIcons/Sun.svg" alt="" class="bottom-menu-weather-icon" />
+         </button>
+         <button type="button" class="bottom-menu-weather-btn" @click="handleWeatherTimeClick('night')" aria-label="Ночь">
+            <img src="@/assets/icons/newIcons/Moon.svg" alt="" class="bottom-menu-weather-icon" />
+         </button>
+         <div class="bottom-menu-time-wrap" @click="toggleTimePicker">
+            <img src="@/assets/icons/newIcons/Sun.svg" alt="" class="bottom-menu-time-icon" />
+            <span class="bottom-menu-time">{{ currentTime }}</span>
+            <TimePicker
+               :show="showTimePicker"
+               v-model="selectedTimeMinutes"
+               @change="handleTimePickerChange"
+            />
+         </div>
+      </div>
+      <div v-else class="bottom-menu-company" @click="handleGoodiniClick">
          HOLO X
          <div
             class="goodini-settings-container"
@@ -49,9 +83,9 @@
             class="bottom-menu-item"
             :class="{
                disabled: item.disabled,
-               active: item.name === 'Holo mode' && isHoloModeActive,
+               active: (item.id === 'holoMode' && isHoloModeActive) || (item.id === 'genplan' && props.screen === 'genplan') || (item.id === 'infrastructure' && props.isInfrastructureActive),
             }"
-            v-for="item in mobileMenuItems"
+            v-for="item in mobileLeftMenuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
             @click="handleItemClick(item)"
@@ -61,6 +95,7 @@
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
                class="bottom-menu-icon"
+               :class="{ 'bottom-menu-icon-no-text': !item.name || item.showText === false }"
             />
             <span
                class="bottom-menu-text"
@@ -70,19 +105,51 @@
          </div>
       </div>
       <div class="bottom-menu-bottom-mobile">
-         <div class="bottom-menu-item">
+         <div v-if="homeItem" class="bottom-menu-item">
             <div
                class="bottom-menu-item-icon"
-               @click="handleItemClick({ name: 'Home' })"
+               @click="handleItemClick(homeItem)"
             >
                <img
-                  src="../assets/icons/bottomMenu/home.png"
-                  alt="Home"
-                  class="bottom-menu-icon"
+                  :src="homeItem.icon"
+                  :alt="homeItem.name"
+                  class="bottom-menu-icon bottom-menu-icon-no-text"
                />
             </div>
          </div>
-         <div class="bottom-menu-company" @click="handleGoodiniClick">
+         <div v-if="props.screen === 'genplan'" class="bottom-menu-right bottom-menu-right-mobile">
+            <div
+               class="bottom-menu-item"
+               v-for="item in rightMenuItems"
+               :key="item.id"
+               @click="handleItemClick(item)"
+            >
+               <img
+                  :src="item.icon"
+                  :alt="item.name"
+                  :style="{ width: item.width || '26px', height: item.height || '26px' }"
+                  class="bottom-menu-icon"
+                  :class="{ 'bottom-menu-icon-no-text': !item.name || item.showText === false }"
+               />
+               <span v-if="item.name && item.showText !== false" class="bottom-menu-text">{{ item.name }}</span>
+            </div>
+            <button type="button" class="bottom-menu-weather-btn" @click="handleWeatherTimeClick('day')" aria-label="День">
+               <img src="@/assets/icons/newIcons/Sun.svg" alt="" class="bottom-menu-weather-icon" />
+            </button>
+            <button type="button" class="bottom-menu-weather-btn" @click="handleWeatherTimeClick('night')" aria-label="Ночь">
+               <img src="@/assets/icons/newIcons/Moon.svg" alt="" class="bottom-menu-weather-icon" />
+            </button>
+            <div class="bottom-menu-time-wrap" @click="toggleTimePicker">
+               <img src="@/assets/icons/newIcons/Sun.svg" alt="" class="bottom-menu-time-icon" />
+               <span class="bottom-menu-time">{{ currentTime }}</span>
+               <TimePicker
+                  :show="showTimePicker"
+                  v-model="selectedTimeMinutes"
+                  @change="handleTimePickerChange"
+               />
+            </div>
+         </div>
+         <div v-else class="bottom-menu-company" @click="handleGoodiniClick">
             HOLO X
             <div
                class="goodini-settings-container"
@@ -101,144 +168,137 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount } from "vue";
 import GoodiniSettings from "./GoodiniSettings.vue";
+import TimePicker from "./TimePicker.vue";
+import { getMenuItemsForScreen } from "@/config/bottomMenuConfig.js";
+
+const props = defineProps({
+   /** id экрана для переключения набора кнопок (например 'main', 'avatar') */
+   screen: {
+      type: String,
+      default: "main",
+   },
+   /** Активна ли вкладка Инфраструктура */
+   isInfrastructureActive: {
+      type: Boolean,
+      default: false,
+   },
+});
 
 const emit = defineEmits([
    "hide",
-   "showWeatherTime",
+   "switchScreen",
    "showDataBlocks",
    "showGoodiniSettings",
    "qualitySelected",
    "sendToEngine",
-   "showApartments",
-   "toggleHoloMode", // Переключение Holo mode с проверкой инфраструктуры
+   "toggleHoloMode",
+   "timeOfDay",
+   "showWelcome",
 ]);
 
 const showSettings = ref(false);
-const isHoloModeActive = ref(false); // Состояние Holo mode
+const isHoloModeActive = ref(false);
 
-// Данные для нижнего меню - используем computed для динамического disabled
-const menuItems = computed(() => [
-   {
-      id: 1,
-      name: "Home",
-      icon: "src/assets/icons/bottomMenu/home.png",
-      showText: false,
-   },
-   {
-      id: 2,
-      name: "Hide",
-      icon: "src/assets/icons/bottomMenu/hide.png",
-   },
-   // {
-   //    id: 3,
-   //    name: "Time",
-   //    icon: "src/assets/icons/bottomMenu/time.png",
-   // },
-   // {
-   //    id: 4,
-   //    name: "Сезон",
-   //    icon: "src/assets/icons/bottomMenu/season.png",
-   // },
-   {
-      id: 5,
-      name: "Environment",
-      icon: "src/assets/icons/bottomMenu/inner-court.png",
-   },
-   {
-      id: 6,
-      name: "Infrastructure",
-      icon: "src/assets/icons/bottomMenu/infrastructure.png",
-   },
-   // {
-   //    id: 7,
-   //    name: "Квартиры",
-   //    icon: "src/assets/icons/bottomMenu/infrastructure.png",
-   // },
-   // {
-   //    id: 8,
-   //    name: "Курсор",
-   //    icon: "src/assets/icons/bottomMenu/cursor.png",
-   //    width: "44px",
-   //    height: "44px",
-   // },
-   {
-      id: 9,
-      name: "Next mode",
-      icon: "src/assets/icons/bottomMenu/next-mode.svg",
-      width: "35px",
-      height: "35px",
-   },
-   {
-      id: 10,
-      name: "Holo mode",
-      icon: "src/assets/icons/bottomMenu/hold-mode.svg",
-      width: "35px",
-      height: "35px",
-   },
-   {
-      id: 11,
-      name: "Demo mode",
-      icon: "src/assets/icons/bottomMenu/DemoMode.svg",
-      width: "35px",
-      height: "35px",
-   },
-]);
+// Кнопки из конфига для текущего экрана
+const menuItems = computed(() => getMenuItemsForScreen(props.screen));
 
-// Для мобильной версии исключаем кнопку Home (id: 1)
-const mobileMenuItems = computed(() => {
-   return menuItems.value.filter((item) => item.id !== 1);
+// Левая часть: кнопки без rightSide (Ускорить, Текущее — в правой части)
+const leftMenuItems = computed(() =>
+   menuItems.value.filter((item) => !item.rightSide)
+);
+
+// Правая часть на экране Генплан: Ускорить, Текущее
+const rightMenuItems = computed(() =>
+   menuItems.value.filter((item) => item.rightSide === true)
+);
+
+// Мобильная версия: левые кнопки без Home (Home вынесен отдельно)
+const mobileLeftMenuItems = computed(() =>
+   leftMenuItems.value.filter((item) => item.id !== "home")
+);
+
+const homeItem = computed(() => leftMenuItems.value.find((i) => i.id === "home"));
+
+// Текущее время для блока погода/время
+const currentTime = ref("");
+function updateTime() {
+   const now = new Date();
+   currentTime.value = now.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+}
+let timeIntervalId = null;
+function handleDocumentClick(e) {
+   if (showTimePicker.value) {
+      const wrap = document.querySelector(".bottom-menu-time-wrap");
+      if (wrap && !wrap.contains(e.target)) {
+         showTimePicker.value = false;
+      }
+   }
+}
+
+onMounted(() => {
+   updateTime();
+   timeIntervalId = setInterval(updateTime, 1000);
+   document.addEventListener("click", handleDocumentClick);
+});
+onBeforeUnmount(() => {
+   if (timeIntervalId) clearInterval(timeIntervalId);
+   document.removeEventListener("click", handleDocumentClick);
 });
 
-const handleItemClick = (item) => {
-   // Игнорируем клики на неактивных кнопках
-   if (item.disabled) {
-      return;
+/** Выполнить действия по клику из конфига */
+function runItemActions(item) {
+   if (!item.actions) return;
+   for (const action of item.actions) {
+      if (action.type === "sendToEngine") {
+         emit("sendToEngine", action.payload);
+      } else if (action.type === "emit") {
+         emit(action.event, action.payload);
+      }
    }
+}
 
-   if (item.name === "Home") {
-      emit("sendToEngine", { home: "" });
-   } else if (item.name === "Hide") {
-      emit("hide");
-      emit("sendToEngine", { hide: "" });
-   } else if (item.name === "Time") {
-      emit("showWeatherTime");
-   } else if (item.name === "Сезон") {
-      emit("sendToEngine", { season: "" });
-   } else if (item.name === "Infrastructure") {
-      emit("showDataBlocks", "infrastructure");
-      emit("sendToEngine", { infrastructure: "" });
-   } else if (item.name === "Environment") {
-      emit("showDataBlocks", "courtyard");
-      emit("sendToEngine", { courtyard: "" });
-   } else if (item.name === "Квартиры") {
-      emit("showApartments");
-      emit("sendToEngine", { rooms: "" });
-   } else if (item.name === "Курсор") {
-      emit("sendToEngine", { cursor: "" });
-   } else if (item.name === "Next mode") {
-      emit("sendToEngine", { nextmode: "" });
-   } else if (item.name === "Holo mode") {
-      // Toggle Holo mode - активирует/деактивирует кнопку Инфраструктура
+const handleItemClick = (item) => {
+   if (!item || item.disabled) return;
+
+   if (item.special === "toggleHoloMode") {
       const wasActive = isHoloModeActive.value;
       isHoloModeActive.value = !isHoloModeActive.value;
-
-      // Передаем информацию о переключении в ConnectedDisplay
-      // Он сам решит что отправлять: только holomode или holomode + home
       emit("toggleHoloMode", {
          wasActive,
          isNowActive: isHoloModeActive.value,
       });
-   } else if (item.name === "Demo mode") {
-      emit("sendToEngine", { DemoMode: "" });
+      return;
    }
+
+   runItemActions(item);
 };
 
 const handleGoodiniClick = () => {
    showSettings.value = !showSettings.value;
    emit("showGoodiniSettings");
 };
+
+/** Клик по иконке солнца (день) или луны (ночь) */
+function handleWeatherTimeClick(mode) {
+   emit("timeOfDay", mode);
+   emit("sendToEngine", { timeOfDay: mode });
+}
+
+const showTimePicker = ref(false);
+const selectedTimeMinutes = ref(540);
+
+function toggleTimePicker() {
+   showTimePicker.value = !showTimePicker.value;
+}
+
+function handleTimePickerChange(minutes) {
+   const hours = Math.floor(minutes / 60);
+   const mins = minutes % 60;
+   const timeStr = `${hours}:${String(mins).padStart(2, "0")}`;
+   emit("sendToEngine", { time: timeStr });
+}
 
 const hideSettings = () => {
    showSettings.value = false;
@@ -257,7 +317,6 @@ const handleGoodiniSendToEngine = (data) => {
 .bottom-menu {
    position: relative;
    width: 100%;
-   background-color: rgba(34, 34, 34, 0.9);
    z-index: 10;
    pointer-events: auto;
 }
@@ -272,35 +331,34 @@ const handleGoodiniSendToEngine = (data) => {
 .bottom-menu-content {
    display: flex;
    align-items: center;
-   justify-content: space-around;
    width: 100%;
-   max-width: 1400px;
    overflow-x: auto;
-   padding: 0 20px;
 }
 
 .bottom-menu-item {
    display: flex;
-   flex: 1 1 auto;
-   height: 50px;
    align-items: center;
    cursor: pointer;
-   padding: 0 15px;
+   padding: 12px;
    transition: all 0.3s ease;
-   border-right: 1px solid rgba(255, 255, 255, 0.3);
+   background-color: var(--color-background);
+   backdrop-filter: var(--backdrop-blur);
+   border-radius: 12px;
    user-select: none;
+   margin-right: 12px;
+   transition: all 0.3s ease;
    @media (max-width: 1549px) {
       height: 40px;
    }
-}
-
-.bottom-menu-item:last-child {
-   border-right: none;
-}
-
-.bottom-menu-item:hover {
-   background-color: rgba(255, 255, 255, 0.3);
-   transform: translateY(-2px);
+   &:last-child {
+      margin-right: 0;
+   }
+   &:hover {
+      background-color: var(--color-hover);
+   }
+   &.active {
+      background-color: var(--color-hover);
+   }
 }
 
 /* Стили для неактивных кнопок */
@@ -327,30 +385,111 @@ const handleGoodiniSendToEngine = (data) => {
    width: 26px;
    height: 26px;
    filter: brightness(0) invert(1);
-   margin-right: 5px;
+   margin-right: 12px;
    user-select: none;
    pointer-events: none;
 }
 
+.bottom-menu-icon-no-text {
+   margin-right: 0;
+}
+
 .bottom-menu-text {
-   font-size: 0.75rem;
+   font-size: 1.125rem;
+   /* font-weight: 300; */
    color: #fff;
    text-align: center;
    letter-spacing: 1px;
    text-wrap: nowrap;
    user-select: none;
+}
+
+.bottom-menu-right {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   flex-shrink: 0;
+}
+
+.bottom-menu-right .bottom-menu-item {
+   margin-right: 0;
+}
+
+.bottom-menu-weather-btn {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   width: 44px;
+   height: 44px;
+   padding: 0;
+   border: none;
+   border-radius: 12px;
+   background-color: var(--color-background);
+   backdrop-filter: var(--backdrop-blur);
+   cursor: pointer;
+   transition: background-color 0.3s ease;
+}
+
+.bottom-menu-weather-btn:hover {
+   background-color: var(--color-hover);
+}
+
+.bottom-menu-weather-icon {
+   width: 22px;
+   height: 22px;
+   filter: brightness(0) invert(1);
+   opacity: 0.9;
+   pointer-events: none;
+}
+
+.bottom-menu-time-wrap {
+   position: relative;
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 8px 12px;
+   background-color: var(--color-background);
+   backdrop-filter: var(--backdrop-blur);
+   border-radius: 12px;
+   font-size: 1.125rem;
+   color: #fff;
+   font-family: "Jost", sans-serif;
+   cursor: pointer;
+   transition: background-color 0.3s ease;
+}
+
+.bottom-menu-time-wrap:hover {
+   background-color: var(--color-hover);
+}
+
+.bottom-menu-time-icon {
+   width: 22px;
+   height: 22px;
+   filter: brightness(0) invert(1);
+   opacity: 0.9;
+   flex-shrink: 0;
+}
+
+.bottom-menu-time {
+   /* font-weight: 300; */
+   letter-spacing: 1px;
+   user-select: none;
+}
+
+.bottom-menu-right-mobile {
+   flex-wrap: wrap;
+   gap: 8px;
 }
 
 .bottom-menu-company {
    position: relative;
    font-size: 1.125rem;
+   /* font-weight: 300; */
    color: #fff;
    text-align: center;
-   letter-spacing: 1px;
-   text-wrap: nowrap;
-   font-family: "Roboto", sans-serif;
    letter-spacing: 10px;
-   margin-right: 40px;
+   text-wrap: nowrap;
+   font-family: "Jost", sans-serif;
    cursor: pointer;
    transition: opacity 0.3s ease;
    user-select: none;
