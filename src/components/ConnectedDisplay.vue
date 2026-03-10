@@ -10,22 +10,14 @@
                   class="left-menu-wrapper"
                   :class="{ collapsed: menusCollapsed.leftMenu }"
                >
-                  <div class="house-body-buttons-row">
-                     <button
-                        class="left-menu-toggle-btn"
-                        @click="toggleMenuCollapse('leftMenu')"
-                     >
-                        {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
-                     </button>
-                     <div class="left-menu-buttons">
-                        <button
-                           class="left-menu-info-btn"
-                           @click="handleAIAvatarButtonClick"
-                        >
-                           AI Avatar
-                        </button>
-                     </div>
-                  </div>
+               <div class="house-body-buttons-row">
+                  <button
+                     class="left-menu-toggle-btn"
+                     @click="toggleMenuCollapse('leftMenu')"
+                  >
+                     {{ menusCollapsed.leftMenu ? "▶" : "◀" }}
+                  </button>
+               </div>
                   <div class="left-menu-inner">
                      <CorpSelector
                         :corps="corps"
@@ -46,9 +38,15 @@
                <div class="left-menu-info-buttons-desktop">
                   <button
                      class="left-menu-info-btn"
-                     @click="handleAIAvatarButtonClick"
+                     @click="handleSendToEngine({ aboutCompany: '' })"
                   >
-                     AI Avatar
+                     About Company
+                  </button>
+                  <button
+                     class="left-menu-info-btn"
+                     @click="handleSendToEngine({ aboutProject: '' })"
+                  >
+                     About Project
                   </button>
                </div>
             </div>
@@ -856,8 +854,8 @@ onBeforeUnmount(() => {
 .left-menu-wrapper.collapsed {
    @media (max-width: 1549px) {
       transform: translateX(
-         calc(-100% + 135px)
-      ); /* Уезжает влево, оставляя только кнопку сворачивания и AI Avatar */
+         calc(-100% + 40px)
+      ); /* Уезжает влево, оставляя только кнопку сворачивания */
    }
 }
 
@@ -917,10 +915,6 @@ onBeforeUnmount(() => {
    display: flex;
    gap: 10px;
    padding-top: 10px;
-
-   @media (max-width: 1549px) {
-      display: none; /* Скрываем на мобильной версии, там кнопки в другом месте */
-   }
 }
 
 .left-menu-info-btn {

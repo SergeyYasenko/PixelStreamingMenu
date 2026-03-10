@@ -8,7 +8,7 @@
                disabled: item.disabled,
                active: item.name === 'Holo mode' && isHoloModeActive,
             }"
-            v-for="item in menuItems"
+            v-for="item in desktopMenuItems"
             :key="item.id"
             :style="{ alignItems: item.alignItems }"
             @click="handleItemClick(item)"
@@ -17,7 +17,7 @@
                :src="item.icon"
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
-               class="bottom-menu-icon"
+               :class="['bottom-menu-icon', { 'bottom-menu-icon-reset': item.name === 'Reset' }]"
             />
             <span
                class="bottom-menu-text"
@@ -26,18 +26,37 @@
             >
          </div>
       </div>
-      <div class="bottom-menu-company" @click="handleGoodiniClick">
-         HOLO X
-         <div
-            class="goodini-settings-container"
-            v-if="showSettings"
-            @click.stop
-         >
-            <GoodiniSettings
-               @close="hideSettings"
-               @qualitySelected="handleQualitySelected"
-               @sendToEngine="handleGoodiniSendToEngine"
+      <!-- Кнопка Reset отдельным блоком между левым меню и правыми кнопками -->
+      <button class="bottom-menu-small-btn" @click="handleResetClick">
+         <img
+            src="../assets/icons/bottomMenu/reset.svg"
+            alt="Reset"
+            class="bottom-menu-icon bottom-menu-icon-reset"
+         />
+      </button>
+      <!-- Правая группа: Demo + HOLO X -->
+      <div class="bottom-menu-right-group">
+         <button class="bottom-menu-small-btn" @click="handleDemoModeClick">
+            <img
+               src="../assets/icons/bottomMenu/DemoMode.svg"
+               alt="Demo"
+               class="bottom-menu-icon"
             />
+            <span class="bottom-menu-text">Demo</span>
+         </button>
+         <div class="bottom-menu-company" @click="handleGoodiniClick">
+            HOLO X
+            <div
+               class="goodini-settings-container"
+               v-if="showSettings"
+               @click.stop
+            >
+               <GoodiniSettings
+                  @close="hideSettings"
+                  @qualitySelected="handleQualitySelected"
+                  @sendToEngine="handleGoodiniSendToEngine"
+               />
+            </div>
          </div>
       </div>
    </div>
@@ -60,7 +79,7 @@
                :src="item.icon"
                :alt="item.name"
                :style="{ width: item.width, height: item.height }"
-               class="bottom-menu-icon"
+               :class="['bottom-menu-icon', { 'bottom-menu-icon-reset': item.name === 'Reset' }]"
             />
             <span
                class="bottom-menu-text"
@@ -131,16 +150,6 @@ const menuItems = computed(() => [
       name: "Hide",
       icon: "src/assets/icons/bottomMenu/hide.png",
    },
-   // {
-   //    id: 3,
-   //    name: "Time",
-   //    icon: "src/assets/icons/bottomMenu/time.png",
-   // },
-   // {
-   //    id: 4,
-   //    name: "Сезон",
-   //    icon: "src/assets/icons/bottomMenu/season.png",
-   // },
    {
       id: 5,
       name: "Environment",
@@ -151,45 +160,42 @@ const menuItems = computed(() => [
       name: "Infrastructure",
       icon: "src/assets/icons/bottomMenu/infrastructure.png",
    },
-   // {
-   //    id: 7,
-   //    name: "Квартиры",
-   //    icon: "src/assets/icons/bottomMenu/infrastructure.png",
-   // },
-   // {
-   //    id: 8,
-   //    name: "Курсор",
-   //    icon: "src/assets/icons/bottomMenu/cursor.png",
-   //    width: "44px",
-   //    height: "44px",
-   // },
+   {
+      id: 7,
+      name: "Album",
+      icon: "src/assets/icons/bottomMenu/album.svg",
+   },
+   {
+      id: 8,
+      name: "Photo mode",
+      icon: "src/assets/icons/bottomMenu/photomode.svg",
+   },
    {
       id: 9,
-      name: "Next mode",
-      icon: "src/assets/icons/bottomMenu/next-mode.svg",
+      name: "Reset",
+      icon: "src/assets/icons/bottomMenu/reset.svg",
       width: "35px",
       height: "35px",
+      showText: false,
    },
    {
       id: 10,
-      name: "Holo mode",
-      icon: "src/assets/icons/bottomMenu/hold-mode.svg",
-      width: "35px",
-      height: "35px",
-   },
-   {
-      id: 11,
-      name: "Demo mode",
+      name: "Demo",
       icon: "src/assets/icons/bottomMenu/DemoMode.svg",
       width: "35px",
       height: "35px",
    },
 ]);
 
-// Для мобильной версии исключаем кнопку Home (id: 1)
-const mobileMenuItems = computed(() => {
-   return menuItems.value.filter((item) => item.id !== 1);
-});
+// Для десктопной версии скрываем Reset и Demo в основной линейке (они остаются только справа у HOLO X)
+const desktopMenuItems = computed(() =>
+   menuItems.value.filter((item) => item.name !== "Reset" && item.name !== "Demo")
+);
+
+// Для мобильной версии исключаем кнопку Home (id: 1), оставляем Reset и Demo с текстом
+const mobileMenuItems = computed(() =>
+   menuItems.value.filter((item) => item.id !== 1)
+);
 
 const handleItemClick = (item) => {
    // Игнорируем клики на неактивных кнопках
@@ -217,22 +223,28 @@ const handleItemClick = (item) => {
       emit("sendToEngine", { rooms: "" });
    } else if (item.name === "Курсор") {
       emit("sendToEngine", { cursor: "" });
-   } else if (item.name === "Next mode") {
-      emit("sendToEngine", { nextmode: "" });
-   } else if (item.name === "Holo mode") {
-      // Toggle Holo mode - активирует/деактивирует кнопку Инфраструктура
-      const wasActive = isHoloModeActive.value;
-      isHoloModeActive.value = !isHoloModeActive.value;
-
-      // Передаем информацию о переключении в ConnectedDisplay
-      // Он сам решит что отправлять: только holomode или holomode + home
-      emit("toggleHoloMode", {
-         wasActive,
-         isNowActive: isHoloModeActive.value,
-      });
-   } else if (item.name === "Demo mode") {
-      emit("sendToEngine", { DemoMode: "" });
+   } else if (item.name === "Album") {
+      emit("sendToEngine", { album: "" });
+   } else if (item.name === "Photo mode") {
+      emit("sendToEngine", { PhotoMode: "" });
    }
+};
+
+const handleHoloModeClick = () => {
+   const wasActive = isHoloModeActive.value;
+   isHoloModeActive.value = !isHoloModeActive.value;
+   emit("toggleHoloMode", {
+      wasActive,
+      isNowActive: isHoloModeActive.value,
+   });
+};
+
+const handleDemoModeClick = () => {
+   emit("sendToEngine", { DemoMode: "" });
+};
+
+const handleResetClick = () => {
+   emit("sendToEngine", { reset: "" });
 };
 
 const handleGoodiniClick = () => {
@@ -323,6 +335,20 @@ const handleGoodiniSendToEngine = (data) => {
    opacity: 0.5;
 }
 
+.bottom-menu-right-group {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding-right: 20px;
+}
+
+.bottom-menu-right-group {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+   padding-right: 20px;
+}
+
 .bottom-menu-icon {
    width: 26px;
    height: 26px;
@@ -330,6 +356,28 @@ const handleGoodiniSendToEngine = (data) => {
    margin-right: 5px;
    user-select: none;
    pointer-events: none;
+}
+
+.bottom-menu-icon-reset {
+   transform: rotate(45deg);
+}
+
+.bottom-menu-small-btn {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   height: 50px;
+   padding: 0 15px;
+   border-left: 1px solid rgba(255, 255, 255, 0.3);
+   border-right: 1px solid rgba(255, 255, 255, 0.3);
+   border-top: none;
+   border-bottom: none;
+   background: transparent;
+   cursor: pointer;
+}
+
+.bottom-menu-small-btn:hover {
+   background-color: rgba(255, 255, 255, 0.3);
 }
 
 .bottom-menu-text {
@@ -400,6 +448,7 @@ const handleGoodiniSendToEngine = (data) => {
 .bottom-menu-bottom-mobile .bottom-menu-company {
    margin-right: 0;
 }
+
 
 /* Показываем мобильную версию только на экранах < 1550px */
 @media (max-width: 1549px) {
