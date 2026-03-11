@@ -25,6 +25,17 @@
             </label>
          </div>
          <div class="setting-item">
+            <label class="checkbox-label" @click.stop>
+               <input
+                  type="checkbox"
+                  v-model="settings.holoMode"
+                  class="checkbox-input"
+               />
+               <span class="checkbox-custom"></span>
+               <span class="setting-text">HOLO</span>
+            </label>
+         </div>
+         <div class="setting-item">
             <button
                class="setting-button"
                @click.stop="handleQualityClick('high')"
@@ -97,6 +108,7 @@ const loadSettings = () => {
    return {
       invertYaw: true,
       invertPitch: true,
+      holoMode: false,
       fullscreenEnabled: true, // По умолчанию fullscreen включен
    };
 };
@@ -203,6 +215,15 @@ watch(
    (newValue) => {
       saveSettings();
       toggleFullscreen(newValue);
+   }
+);
+
+// При изменении HOLO отправляем команду в UE
+watch(
+   () => settings.value.holoMode,
+   () => {
+      saveSettings();
+      emit("sendToEngine", { holomode: "" });
    }
 );
 
