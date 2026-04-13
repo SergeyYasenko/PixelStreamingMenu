@@ -35,12 +35,6 @@
             @send-data="sendJsonData"
             @send-to-engine="sendToEngine"
          />
-         <div v-if="DEBUG_TOUCH_REVERSE && debugTouchInfo.active" class="touch-debug-overlay">
-            <div class="touch-debug-row"><strong>Touch Debug</strong></div>
-            <div class="touch-debug-row">{{ debugTouchInfo.type }}</div>
-            <div class="touch-debug-row">touch: {{ debugTouchInfo.touchX }}, {{ debugTouchInfo.touchY }}</div>
-            <div class="touch-debug-row">inverted: {{ debugTouchInfo.invertedX }}, {{ debugTouchInfo.invertedY }}</div>
-         </div>
       </div>
    </div>
 </template>
@@ -54,23 +48,12 @@ import {
 import ConnectedDisplay from "./ConnectedDisplay.vue";
 
 const videoContainer = ref(null);
-// На телефоне `localhost` — это сам телефон, поэтому ws-коннект не получится.
-// Подставляем хост, с которого открыли UI (PC IP из адресной строки).
-const signallingUrl = ref(`ws://${window.location.hostname}:80`);
+const signallingUrl = ref("ws://localhost:80");
 const isConnected = ref(false);
 const isConnecting = ref(false);
 const errorMessage = ref("");
 const receivedMessages = ref([]);
 const lastMessage = ref("");
-const DEBUG_TOUCH_REVERSE = true;
-const debugTouchInfo = ref({
-   active: false,
-   type: "",
-   touchX: 0,
-   touchY: 0,
-   invertedX: 0,
-   invertedY: 0,
-});
 
 let pixelStreaming = null;
 
@@ -113,11 +96,6 @@ const setupMouseInterception = () => {
                      return;
                   }
 
-                  // Если это синтетический mouse event от touch, не инвертируем повторно
-                  if (e.sourceCapabilities?.firesTouchEvents) {
-                     return;
-                  }
-
                   // Останавливаем оригинальное событие
                   e.preventDefault();
                   e.stopImmediatePropagation();
@@ -151,63 +129,6 @@ const setupMouseInterception = () => {
                },
                true
             ); // Используем capture фазу
-         });
-
-         // Touch -> Mouse с инвертированной X координатой (для тач-экранов)
-         const touchToMouseMap = {
-            touchstart: "mousedown",
-            touchmove: "mousemove",
-            touchend: "mouseup",
-         };
-
-         Object.entries(touchToMouseMap).forEach(([touchType, mouseType]) => {
-            video.addEventListener(
-               touchType,
-               (e) => {
-                  if (!e.changedTouches || e.changedTouches.length === 0) return;
-
-                  const touch = e.changedTouches[0];
-                  const rect = video.getBoundingClientRect();
-                  const relativeX = touch.clientX - rect.left;
-                  const invertedX = rect.width - relativeX;
-                  const invertedClientX = rect.left + invertedX;
-                  const invertedClientY = touch.clientY;
-
-                  if (DEBUG_TOUCH_REVERSE) {
-                     debugTouchInfo.value = {
-                        active: true,
-                        type: `${touchType} -> ${mouseType}`,
-                        touchX: Math.round(touch.clientX),
-                        touchY: Math.round(touch.clientY),
-                        invertedX: Math.round(invertedClientX),
-                        invertedY: Math.round(invertedClientY),
-                     };
-                  }
-
-                  const newEvent = new MouseEvent(mouseType, {
-                     bubbles: true,
-                     cancelable: true,
-                     clientX: invertedClientX,
-                     clientY: invertedClientY,
-                     button: 0,
-                     buttons: mouseType === "mouseup" ? 0 : 1,
-                  });
-
-                  newEvent.inverted = true;
-                  video.dispatchEvent(newEvent);
-
-                  // Блокируем дефолтный touch scroll/zoom и двойную доставку
-                  if (touchType !== "touchend") {
-                     e.preventDefault();
-                     e.stopImmediatePropagation();
-                  } else if (DEBUG_TOUCH_REVERSE) {
-                     setTimeout(() => {
-                        debugTouchInfo.value.active = false;
-                     }, 400);
-                  }
-               },
-               { capture: true, passive: false }
-            );
          });
 
          observer.disconnect();
@@ -247,7 +168,7 @@ const connect = async () => {
             // ============================================
             StartVideoMuted: false, // Запускать видео без звука (default: false)
             HoveringMouse: false, // Отображать курсор мыши при наведении (default: true)
-            FakeMouseWithTouches: false, // Отключаем авто-конвертацию touch->mouse, чтобы не было двойного реверса
+            FakeMouseWithTouches: true, // Эмулировать мышь через тач-события (default: true)
 
             // Использование аудио/микрофона
             UseMic: false, // Использовать микрофон (default: false)
@@ -652,25 +573,6 @@ onBeforeUnmount(() => {
    /* Предотвращение мерцания на планшетах */
    -webkit-font-smoothing: antialiased;
    -moz-osx-font-smoothing: grayscale;
-}
-
-.touch-debug-overlay {
-   position: absolute;
-   top: 12px;
-   right: 12px;
-   z-index: 1000;
-   pointer-events: none;
-   background: rgba(0, 0, 0, 0.72);
-   color: #fff;
-   border: 1px solid rgba(255, 255, 255, 0.3);
-   border-radius: 8px;
-   padding: 8px 10px;
-   font-size: 0.75rem;
-   line-height: 1.35;
-}
-
-.touch-debug-row {
-   white-space: nowrap;
 }
 
 .overlay {

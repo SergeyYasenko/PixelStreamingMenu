@@ -36,14 +36,14 @@
       </button>
       <!-- Правая группа: Demo + HOLO X -->
       <div class="bottom-menu-right-group">
-         <button class="bottom-menu-small-btn" @click="handleDemoModeClick">
-            <img
-               src="../assets/icons/bottomMenu/DemoMode.svg"
-               alt="Demo"
-               class="bottom-menu-icon"
-            />
-            <span class="bottom-menu-text">Demo</span>
-         </button>
+      <!-- <button class="bottom-menu-small-btn" @click="handleDemoModeClick">
+         <img
+            src="../assets/icons/bottomMenu/DemoMode.svg"
+            alt="Demo"
+            class="bottom-menu-icon"
+         />
+         <span class="bottom-menu-text">Demo</span>
+      </button> -->
          <div class="bottom-menu-company" @click="handleGoodiniClick">
             HOLO X
             <div
@@ -160,16 +160,16 @@ const menuItems = computed(() => [
       name: "Infrastructure",
       icon: "src/assets/icons/bottomMenu/infrastructure.png",
    },
-   {
-      id: 7,
-      name: "Album",
-      icon: "src/assets/icons/bottomMenu/album.svg",
-   },
-   {
-      id: 8,
-      name: "Photo mode",
-      icon: "src/assets/icons/bottomMenu/photomode.svg",
-   },
+   // {
+   //    id: 7,
+   //    name: "Album",
+   //    icon: "src/assets/icons/bottomMenu/album.svg",
+   // },
+   // {
+   //    id: 8,
+   //    name: "Photo mode",
+   //    icon: "src/assets/icons/bottomMenu/photomode.svg",
+   // },
    {
       id: 9,
       name: "Reset",
@@ -178,13 +178,13 @@ const menuItems = computed(() => [
       height: "35px",
       showText: false,
    },
-   {
-      id: 10,
-      name: "Demo",
-      icon: "src/assets/icons/bottomMenu/DemoMode.svg",
-      width: "35px",
-      height: "35px",
-   },
+   // {
+   //    id: 10,
+   //    name: "Demo",
+   //    icon: "src/assets/icons/bottomMenu/DemoMode.svg",
+   //    width: "35px",
+   //    height: "35px",
+   // },
 ]);
 
 // Для десктопной версии скрываем Reset и Demo в основной линейке (они остаются только справа у HOLO X)
@@ -239,9 +239,9 @@ const handleHoloModeClick = () => {
    });
 };
 
-const handleDemoModeClick = () => {
-   emit("sendToEngine", { DemoMode: "" });
-};
+// const handleDemoModeClick = () => {
+//    emit("sendToEngine", { DemoMode: "" });
+// };
 
 const handleResetClick = () => {
    emit("sendToEngine", { reset: "" });

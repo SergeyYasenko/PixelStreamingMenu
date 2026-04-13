@@ -24,7 +24,7 @@
                <span class="setting-text">INVERT PITCH</span>
             </label>
          </div>
-         <div class="setting-item">
+         <!-- <div class="setting-item">
             <label class="checkbox-label" @click.stop>
                <input
                   type="checkbox"
@@ -34,7 +34,7 @@
                <span class="checkbox-custom"></span>
                <span class="setting-text">HOLO</span>
             </label>
-         </div>
+         </div> -->
          <div class="setting-item">
             <button
                class="setting-button"
@@ -219,13 +219,13 @@ watch(
 );
 
 // При изменении HOLO отправляем команду в UE
-watch(
-   () => settings.value.holoMode,
-   () => {
-      saveSettings();
-      emit("sendToEngine", { holomode: "" });
-   }
-);
+// watch(
+//    () => settings.value.holoMode,
+//    () => {
+//       saveSettings();
+//       emit("sendToEngine", { holomode: "" });
+//    }
+// );
 
 // При монтировании компонента отправляем текущие настройки на UE
 onMounted(() => {
