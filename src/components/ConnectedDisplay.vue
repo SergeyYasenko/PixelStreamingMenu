@@ -35,20 +35,6 @@
                      />
                   </div>
                </div>
-               <div class="left-menu-info-buttons-desktop">
-                  <button
-                     class="left-menu-info-btn"
-                     @click="handleSendToEngine({ aboutCompany: '' })"
-                  >
-                     About Company
-                  </button>
-                  <button
-                     class="left-menu-info-btn"
-                     @click="handleSendToEngine({ aboutProject: '' })"
-                  >
-                     About Project
-                  </button>
-               </div>
             </div>
             <WeatherTimeSelector
                v-show="showWeatherTime"
@@ -818,7 +804,8 @@ onBeforeUnmount(() => {
 
 .house-body {
    min-width: 180px;
-   width: 100%;
+   width: fit-content;
+   max-width: 100%;
    position: absolute;
    top: 0;
    left: 0;
@@ -909,32 +896,6 @@ onBeforeUnmount(() => {
       order: 3; /* Кнопки справа от стрелки сворачивания */
       margin-left: 10px;
    }
-}
-
-.left-menu-info-buttons-desktop {
-   display: flex;
-   gap: 10px;
-   padding-top: 10px;
-}
-
-.left-menu-info-btn {
-   display: block;
-   background: rgba(255, 255, 255, 0.2);
-   border: none;
-   color: #fff;
-   font-size: 0.75rem;
-   padding: 8px 12px;
-   border-radius: 4px;
-   cursor: pointer;
-   transition: background 0.3s ease;
-   white-space: nowrap;
-   user-select: none;
-   font-family: inherit;
-   text-transform: uppercase;
-}
-
-.left-menu-info-btn:hover {
-   background: rgba(255, 255, 255, 0.3);
 }
 
 .left-menu-inner {
